@@ -46,7 +46,7 @@ import com.patchfox.mise.ui.theme.MiseTokens
 import com.patchfox.mise.ui.theme.recipe
 
 @Composable
-fun CookTablet(state: CookUiState, viewModel: CookViewModel) {
+fun CookTablet(state: CookUiState, actions: CookActions) {
     if (state.card == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (state.loading) CircularProgressIndicator()
@@ -70,15 +70,15 @@ fun CookTablet(state: CookUiState, viewModel: CookViewModel) {
             }
             PhaseTabs(
                 selected = state.selectedPhase,
-                onSelect = viewModel::setPhase,
+                onSelect = actions.setPhase,
                 modifier = Modifier.width(280.dp),
             )
         }
         Spacer(Modifier.height(20.dp))
         when (state.selectedPhase) {
             PhaseTab.Phase0 -> Phase0Tablet(card.cookPlan.phases.filterIsInstance<Phase.Phase0>().firstOrNull())
-            PhaseTab.Phase1 -> Phase1Tablet(card.phase1(), state, viewModel, card.recipes.associateBy { it.id })
-            PhaseTab.Phase2 -> Phase2Tablet(card.phase2(), state, viewModel)
+            PhaseTab.Phase1 -> Phase1Tablet(card.phase1(), state, actions, card.recipes.associateBy { it.id })
+            PhaseTab.Phase2 -> Phase2Tablet(card.phase2(), state, actions)
         }
     }
 }
@@ -105,7 +105,7 @@ private fun Phase0Tablet(phase: Phase.Phase0?) {
 private fun Phase1Tablet(
     phase: Phase.Phase1?,
     state: CookUiState,
-    viewModel: CookViewModel,
+    actions: CookActions,
     recipesById: Map<com.patchfox.mise.domain.model.RecipeId, com.patchfox.mise.domain.model.Recipe>,
 ) {
     if (phase == null) return
@@ -121,14 +121,14 @@ private fun Phase1Tablet(
                 bowl = bowl,
                 primaryRecipe = primary,
                 checked = bowl.id in state.miseChecks,
-                onToggle = { c -> viewModel.toggleMiseCheck(bowl.id, c) },
+                onToggle = { c -> actions.toggleMiseCheck(bowl.id, c) },
             )
         }
     }
 }
 
 @Composable
-private fun Phase2Tablet(phase: Phase.Phase2?, state: CookUiState, viewModel: CookViewModel) {
+private fun Phase2Tablet(phase: Phase.Phase2?, state: CookUiState, actions: CookActions) {
     if (phase == null || phase.steps.isEmpty()) return
     val steps = phase.steps
     val current = steps.getOrNull(state.currentStepIndex) ?: return
@@ -158,7 +158,7 @@ private fun Phase2Tablet(phase: Phase.Phase2?, state: CookUiState, viewModel: Co
                             if (isActive) MiseTokens.colors.surface else MiseTokens.colors.bg,
                             RoundedCornerShape(8.dp),
                         )
-                        .clickable { viewModel.jumpToStep(idx) }
+                        .clickable { actions.jumpToStep(idx) }
                         .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -201,8 +201,8 @@ private fun Phase2Tablet(phase: Phase.Phase2?, state: CookUiState, viewModel: Co
                         onDragStart = { totalDx = 0f },
                         onDragEnd = {
                             val threshold = with(density) { 60.dp.toPx() }
-                            if (totalDx <= -threshold) viewModel.advanceStep(1)
-                            else if (totalDx >= threshold) viewModel.advanceStep(-1)
+                            if (totalDx <= -threshold) actions.advanceStep(1)
+                            else if (totalDx >= threshold) actions.advanceStep(-1)
                         },
                         onDragCancel = { totalDx = 0f },
                         onHorizontalDrag = { _, delta -> totalDx += delta },
@@ -238,7 +238,7 @@ private fun Phase2Tablet(phase: Phase.Phase2?, state: CookUiState, viewModel: Co
                     remainingSeconds = t.remainingSeconds,
                     recipeEmoji = t.recipeEmoji,
                     recipeColor = t.recipeColor,
-                    onDismiss = { viewModel.dismissTimer(t.id) },
+                    onDismiss = { actions.dismissTimer(t.id) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(10.dp))
@@ -250,7 +250,7 @@ private fun Phase2Tablet(phase: Phase.Phase2?, state: CookUiState, viewModel: Co
                     durationSeconds = pending.durationSeconds,
                     recipeEmoji = current.recipeEmoji,
                     recipeColor = current.recipeColor,
-                    onStart = { viewModel.startTimerForCurrentStep() },
+                    onStart = { actions.startTimerForCurrentStep() },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

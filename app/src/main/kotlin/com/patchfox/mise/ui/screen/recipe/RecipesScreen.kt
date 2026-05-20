@@ -38,13 +38,21 @@ fun RecipesScreen(
     viewModel: RecipeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
-    if (state.card == null) {
+    val card = state.card
+    if (card == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (state.loading) CircularProgressIndicator()
         }
         return
     }
-    val recipes = state.card!!.recipes
+    RecipesContent(recipes = card.recipes, onOpenRecipe = onOpenRecipe)
+}
+
+@Composable
+fun RecipesContent(
+    recipes: List<Recipe>,
+    onOpenRecipe: (RecipeId) -> Unit,
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()

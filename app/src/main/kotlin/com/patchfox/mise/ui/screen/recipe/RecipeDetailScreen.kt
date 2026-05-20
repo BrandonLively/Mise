@@ -70,7 +70,7 @@ fun RecipeDetailScreen(
 }
 
 @Composable
-private fun RecipeDetailPhone(recipe: Recipe, onBack: () -> Unit) {
+internal fun RecipeDetailPhone(recipe: Recipe, onBack: () -> Unit) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -92,7 +92,7 @@ private fun RecipeDetailPhone(recipe: Recipe, onBack: () -> Unit) {
 }
 
 @Composable
-private fun RecipeDetailTablet(recipes: List<Recipe>, initial: Recipe, onBack: () -> Unit) {
+internal fun RecipeDetailTablet(recipes: List<Recipe>, initial: Recipe, onBack: () -> Unit) {
     var selected by remember { mutableStateOf(initial) }
     Row(
         modifier = Modifier

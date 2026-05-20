@@ -72,13 +72,17 @@ fun SummaryScreen(
         return
     }
     when (windowSize) {
-        WindowSize.Compact -> SummaryPhone(state, viewModel)
-        else -> SummaryTablet(state, viewModel)
+        WindowSize.Compact -> SummaryPhone(state, viewModel::setDays, viewModel::setWeight)
+        else -> SummaryTablet(state, viewModel::setDays, viewModel::setWeight)
     }
 }
 
 @Composable
-private fun SummaryPhone(state: SummaryUiState, viewModel: SummaryViewModel) {
+fun SummaryPhone(
+    state: SummaryUiState,
+    onSetDays: (Int) -> Unit,
+    onSetWeight: (RecipeId, String, String) -> Unit,
+) {
     val card = state.card ?: return
     val groups = weighableGroups(card)
     LazyColumn(
@@ -96,7 +100,7 @@ private fun SummaryPhone(state: SummaryUiState, viewModel: SummaryViewModel) {
             Spacer(Modifier.height(14.dp))
         }
         item {
-            DivideByTile(days = state.days, onChange = viewModel::setDays)
+            DivideByTile(days = state.days, onChange = onSetDays)
         }
         items(groups) { (recipe, group) ->
             RecipeWeighCard(
@@ -104,14 +108,18 @@ private fun SummaryPhone(state: SummaryUiState, viewModel: SummaryViewModel) {
                 group = group,
                 days = state.days,
                 inputs = state.inputs,
-                onChange = viewModel::setWeight,
+                onChange = onSetWeight,
             )
         }
     }
 }
 
 @Composable
-private fun SummaryTablet(state: SummaryUiState, viewModel: SummaryViewModel) {
+fun SummaryTablet(
+    state: SummaryUiState,
+    onSetDays: (Int) -> Unit,
+    onSetWeight: (RecipeId, String, String) -> Unit,
+) {
     val card = state.card ?: return
     val groups = weighableGroups(card)
     Row(modifier = Modifier
@@ -141,7 +149,7 @@ private fun SummaryTablet(state: SummaryUiState, viewModel: SummaryViewModel) {
                 color = MiseTokens.colors.ink2,
             )
             Spacer(Modifier.height(24.dp))
-            DivideByTile(days = state.days, onChange = viewModel::setDays, large = true)
+            DivideByTile(days = state.days, onChange = onSetDays, large = true)
         }
         LazyColumn(
             modifier = Modifier
@@ -156,7 +164,7 @@ private fun SummaryTablet(state: SummaryUiState, viewModel: SummaryViewModel) {
                     group = group,
                     days = state.days,
                     inputs = state.inputs,
-                    onChange = viewModel::setWeight,
+                    onChange = onSetWeight,
                 )
             }
         }

@@ -70,7 +70,7 @@ import com.patchfox.mise.ui.theme.MiseTokens
 import com.patchfox.mise.ui.theme.recipe
 
 @Composable
-fun CookPhone(state: CookUiState, viewModel: CookViewModel, onViewSummary: () -> Unit) {
+fun CookPhone(state: CookUiState, actions: CookActions, onViewSummary: () -> Unit) {
     if (state.card == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (state.loading) CircularProgressIndicator()
@@ -110,14 +110,14 @@ fun CookPhone(state: CookUiState, viewModel: CookViewModel, onViewSummary: () ->
         Spacer(Modifier.height(14.dp))
         PhaseTabs(
             selected = state.selectedPhase,
-            onSelect = viewModel::setPhase,
+            onSelect = actions.setPhase,
         )
         Spacer(Modifier.height(14.dp))
 
         when (state.selectedPhase) {
             PhaseTab.Phase0 -> Phase0View(card.phase0())
-            PhaseTab.Phase1 -> Phase1View(card.phase1(), card.recipes.associateBy { it.id }, state, viewModel)
-            PhaseTab.Phase2 -> Phase2View(card.phase2(), state, viewModel, showHandsOff = true, onViewSummary = onViewSummary)
+            PhaseTab.Phase1 -> Phase1View(card.phase1(), card.recipes.associateBy { it.id }, state, actions)
+            PhaseTab.Phase2 -> Phase2View(card.phase2(), state, actions, showHandsOff = true, onViewSummary = onViewSummary)
         }
     }
 }
@@ -160,7 +160,7 @@ private fun Phase1View(
     phase: Phase.Phase1?,
     recipesById: Map<com.patchfox.mise.domain.model.RecipeId, com.patchfox.mise.domain.model.Recipe>,
     state: CookUiState,
-    viewModel: CookViewModel,
+    actions: CookActions,
 ) {
     if (phase == null) return
     val checkedCount = phase.bowls.count { it.id in state.miseChecks }
@@ -170,7 +170,7 @@ private fun Phase1View(
     // this, returning to Phase 1 after auto-advance would re-trigger and bounce
     // the user back to Phase 2.
     LaunchedEffect(allDone) {
-        viewModel.onPhase1AllDoneChanged(allDone)
+        actions.onPhase1AllDoneChanged(allDone)
     }
 
     LazyColumn(
@@ -189,7 +189,7 @@ private fun Phase1View(
                 bowl = bowl,
                 primaryRecipe = primaryRecipe,
                 checked = bowl.id in state.miseChecks,
-                onToggle = { checked -> viewModel.toggleMiseCheck(bowl.id, checked) },
+                onToggle = { checked -> actions.toggleMiseCheck(bowl.id, checked) },
             )
         }
     }
@@ -199,7 +199,7 @@ private fun Phase1View(
 private fun Phase2View(
     phase: Phase.Phase2?,
     state: CookUiState,
-    viewModel: CookViewModel,
+    actions: CookActions,
     showHandsOff: Boolean,
     onViewSummary: () -> Unit,
 ) {
@@ -218,7 +218,7 @@ private fun Phase2View(
         StepProgressBar(
             steps = steps,
             currentIndex = state.currentStepIndex.coerceAtMost(steps.lastIndex),
-            onJumpTo = viewModel::jumpToStep,
+            onJumpTo = actions.jumpToStep,
         )
         Spacer(Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -282,11 +282,11 @@ private fun Phase2View(
                                 when {
                                     currentOffset <= -commitThreshold && state.currentStepIndex < steps.size -> {
                                         offsetX.animateTo(-width, tween(180))
-                                        viewModel.advanceStep(1)
+                                        actions.advanceStep(1)
                                     }
                                     currentOffset >= commitThreshold && state.currentStepIndex > 0 -> {
                                         offsetX.animateTo(width, tween(180))
-                                        viewModel.advanceStep(-1)
+                                        actions.advanceStep(-1)
                                     }
                                     else -> offsetX.animateTo(0f, spring())
                                 }
@@ -300,11 +300,11 @@ private fun Phase2View(
                             when {
                                 startX < edge && canPrev -> coroutineScope.launch {
                                     offsetX.animateTo(width, tween(180))
-                                    viewModel.advanceStep(-1)
+                                    actions.advanceStep(-1)
                                 }
                                 startX > width - edge && canNext -> coroutineScope.launch {
                                     offsetX.animateTo(-width, tween(180))
-                                    viewModel.advanceStep(1)
+                                    actions.advanceStep(1)
                                 }
                             }
                         }
@@ -330,10 +330,10 @@ private fun Phase2View(
         StepThumbStrip(
             steps = steps,
             currentIndex = state.currentStepIndex.coerceAtMost(steps.lastIndex),
-            onJumpTo = viewModel::jumpToStep,
+            onJumpTo = actions.jumpToStep,
         )
         Spacer(Modifier.height(8.dp))
-        ActiveTimersStrip(current ?: steps.last(), state, viewModel)
+        ActiveTimersStrip(current ?: steps.last(), state, actions)
         Spacer(Modifier.height(16.dp))
     }
 }
@@ -385,7 +385,7 @@ private fun CongratsCard(onViewSummary: () -> Unit, modifier: Modifier = Modifie
 private fun ActiveTimersStrip(
     current: CookStep,
     state: CookUiState,
-    viewModel: CookViewModel,
+    actions: CookActions,
 ) {
     val anyPendingForCurrent = current.timer != null && current.id !in state.startedTimerStepIds
     val sortedActive = state.activeTimers.sortedBy { it.remainingSeconds }
@@ -417,7 +417,7 @@ private fun ActiveTimersStrip(
                         title = timer.title,
                         durationSeconds = timer.durationSeconds,
                         recipeColor = current.recipeColor,
-                        onStart = { viewModel.startTimerForCurrentStep() },
+                        onStart = { actions.startTimerForCurrentStep() },
                     )
                 }
                 sortedActive.forEach { t ->
@@ -430,7 +430,7 @@ private fun ActiveTimersStrip(
                         // +1 minute extension is available from the off-Phase-2
                         // alert dialog when the user is away from this strip.
                         onDismiss = {
-                            if (t.remainingSeconds <= 0) viewModel.dismissTimer(t.id)
+                            if (t.remainingSeconds <= 0) actions.dismissTimer(t.id)
                             else pendingStopId = t.id
                         },
                     )
@@ -447,7 +447,7 @@ private fun ActiveTimersStrip(
             text = { Text("It hasn't finished yet.") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.dismissTimer(stopId)
+                    actions.dismissTimer(stopId)
                     pendingStopId = null
                 }) { Text("Stop") }
             },

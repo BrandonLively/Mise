@@ -48,6 +48,17 @@ fun LoginScreen(
         if (state.signedIn) onSignedIn()
     }
 
+    LoginContent(
+        state = state,
+        onSignIn = { activity?.let { viewModel.signIn(it) } },
+    )
+}
+
+@Composable
+fun LoginContent(
+    state: LoginUiState,
+    onSignIn: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -97,9 +108,7 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(60.dp)
                     .background(MiseTokens.colors.surface, RoundedCornerShape(999.dp))
-                    .clickable(enabled = !state.signingIn && activity != null) {
-                        activity?.let { viewModel.signIn(it) }
-                    }
+                    .clickable(enabled = !state.signingIn) { onSignIn() }
                     .padding(horizontal = 22.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

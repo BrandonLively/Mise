@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.services)
     alias(libs.plugins.junit5)
+    alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -144,9 +145,18 @@ dependencies {
     // Unit tests
     testImplementation(libs.junit5.jupiter)
     testRuntimeOnly(libs.junit5.jupiter.engine)
+    // Roborazzi screenshot tests run under Robolectric (JUnit4) — the vintage
+    // engine lets them run on the JUnit Platform alongside the JUnit5 tests.
+    testRuntimeOnly(libs.junit.vintage.engine)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    // Screenshot testing — Roborazzi + Robolectric
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
 
     // Android tests
     androidTestImplementation(libs.androidx.test.runner)

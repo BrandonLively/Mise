@@ -5,9 +5,39 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.patchfox.mise.domain.model.BowlId
 import com.patchfox.mise.ui.component.PhaseTab
 import com.patchfox.mise.ui.window.WindowSize
+
+/**
+ * Bundle of Cook-screen callbacks. Hoisting these into a value lets [CookPhone]
+ * and [CookTablet] (and their inner composables) stay ViewModel-free, so they
+ * render under Paparazzi / previews without a Hilt graph.
+ */
+data class CookActions(
+    val setPhase: (PhaseTab) -> Unit,
+    val jumpToStep: (Int) -> Unit,
+    val advanceStep: (Int) -> Unit,
+    val toggleMiseCheck: (BowlId, Boolean) -> Unit,
+    val startTimerForCurrentStep: () -> Unit,
+    val dismissTimer: (String) -> Unit,
+    val onPhase1AllDoneChanged: (Boolean) -> Unit,
+) {
+    companion object {
+        /** No-op actions, for previews and screenshot tests. */
+        val NONE = CookActions(
+            setPhase = {},
+            jumpToStep = {},
+            advanceStep = {},
+            toggleMiseCheck = { _, _ -> },
+            startTimerForCurrentStep = {},
+            dismissTimer = {},
+            onPhase1AllDoneChanged = {},
+        )
+    }
+}
 
 @Composable
 fun CookScreen(
@@ -18,6 +48,17 @@ fun CookScreen(
     viewModel: CookViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val actions = remember(viewModel) {
+        CookActions(
+            setPhase = viewModel::setPhase,
+            jumpToStep = viewModel::jumpToStep,
+            advanceStep = viewModel::advanceStep,
+            toggleMiseCheck = viewModel::toggleMiseCheck,
+            startTimerForCurrentStep = viewModel::startTimerForCurrentStep,
+            dismissTimer = viewModel::dismissTimer,
+            onPhase1AllDoneChanged = viewModel::onPhase1AllDoneChanged,
+        )
+    }
 
     // Tell the app-level session this screen is visible so the off-Phase-2 timer
     // alert stays suppressed while the user is on Cook (and Phase 2 specifically).
@@ -43,7 +84,7 @@ fun CookScreen(
     }
 
     when (windowSize) {
-        WindowSize.Compact -> CookPhone(state, viewModel, onViewSummary)
-        else -> CookTablet(state, viewModel)
+        WindowSize.Compact -> CookPhone(state, actions, onViewSummary)
+        else -> CookTablet(state, actions)
     }
 }
