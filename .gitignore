@@ -5,6 +5,9 @@ build/
 # Kotlin build cache
 .kotlin/
 
+# Claude Code local settings
+.claude/settings.local.json
+
 # Local configuration file (sdk path, etc)
 local.properties
 
