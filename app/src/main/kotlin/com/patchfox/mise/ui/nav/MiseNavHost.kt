@@ -1,0 +1,72 @@
+package com.patchfox.mise.ui.nav
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
+import com.patchfox.mise.ui.component.PhaseTab
+import com.patchfox.mise.ui.screen.cook.CookScreen
+import com.patchfox.mise.ui.screen.home.HomeScreen
+import com.patchfox.mise.ui.screen.recipe.RecipeDetailScreen
+import com.patchfox.mise.ui.screen.recipe.RecipesScreen
+import com.patchfox.mise.ui.screen.summary.SummaryScreen
+import com.patchfox.mise.ui.window.WindowSize
+
+/**
+ * Authenticated-app navigation graph. Login is handled outside the NavHost
+ * (see [com.patchfox.mise.ui.MiseApp]) so the graph's start destination is
+ * always [HomeRoute] — keeping popUpTo / saveState / restoreState consistent.
+ */
+@Composable
+fun MiseNavHost(
+    navController: NavHostController,
+    windowSize: WindowSize,
+    modifier: Modifier = Modifier,
+) {
+    NavHost(
+        navController = navController,
+        startDestination = HomeRoute,
+        modifier = modifier,
+    ) {
+        composable<HomeRoute> {
+            HomeScreen(
+                windowSize = windowSize,
+                onWalkPlan = { navController.navigate(CookRoute(initialPhase = PhaseTab.Phase0.name)) },
+                onOpenPhase = { phase ->
+                    navController.navigate(CookRoute(initialPhase = phase.name))
+                },
+                onOpenRecipe = { id -> navController.navigate(RecipeDetailRoute(id.value)) },
+            )
+        }
+        composable<CookRoute> { backStackEntry ->
+            val route: CookRoute = backStackEntry.toRoute()
+            CookScreen(
+                windowSize = windowSize,
+                initialStepId = route.initialStepId,
+                initialPhase = route.initialPhase?.let { name ->
+                    runCatching { PhaseTab.valueOf(name) }.getOrNull()
+                },
+                onViewSummary = { navController.navigate(SummaryRoute) },
+            )
+        }
+        composable<SummaryRoute> {
+            SummaryScreen(windowSize = windowSize)
+        }
+        composable<RecipesRoute> {
+            RecipesScreen(
+                windowSize = windowSize,
+                onOpenRecipe = { id -> navController.navigate(RecipeDetailRoute(id.value)) },
+            )
+        }
+        composable<RecipeDetailRoute> { backStackEntry ->
+            val route: RecipeDetailRoute = backStackEntry.toRoute()
+            RecipeDetailScreen(
+                recipeId = route.recipeId,
+                windowSize = windowSize,
+                onBack = { navController.popBackStack() },
+            )
+        }
+    }
+}

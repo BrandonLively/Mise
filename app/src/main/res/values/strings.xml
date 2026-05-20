@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">mise</string>
+    <string name="timer_channel_name">Cook timer alerts</string>
+    <string name="timer_channel_description">Plays an alarm and notifies you when a cook step timer expires.</string>
+    <string name="timer_running_channel_name">Active cook timers</string>
+    <string name="timer_running_channel_description">Persistent notification while one or more cook timers are running.</string>
+    <string name="default_web_client_id" translatable="false">917895968799-jh5hv4o9sr7pbh5ktsihs54cjftvequl.apps.googleusercontent.com</string>
+</resources>
