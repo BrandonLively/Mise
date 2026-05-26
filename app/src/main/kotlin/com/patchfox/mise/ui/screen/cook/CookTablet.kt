@@ -42,11 +42,13 @@ import com.patchfox.mise.ui.component.PendingTimerCardLarge
 import com.patchfox.mise.ui.component.PhaseTab
 import com.patchfox.mise.ui.component.PhaseTabs
 import com.patchfox.mise.ui.component.TimerCardLarge
+import com.patchfox.mise.ui.component.VoiceMicButton
 import com.patchfox.mise.ui.theme.MiseTokens
 import com.patchfox.mise.ui.theme.recipe
+import com.patchfox.mise.voice.VoiceUi
 
 @Composable
-fun CookTablet(state: CookUiState, actions: CookActions) {
+fun CookTablet(state: CookUiState, actions: CookActions, voiceUi: VoiceUi = VoiceUi.OFF) {
     if (state.card == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (state.loading) CircularProgressIndicator()
@@ -78,7 +80,7 @@ fun CookTablet(state: CookUiState, actions: CookActions) {
         when (state.selectedPhase) {
             PhaseTab.Phase0 -> Phase0Tablet(card.cookPlan.phases.filterIsInstance<Phase.Phase0>().firstOrNull())
             PhaseTab.Phase1 -> Phase1Tablet(card.phase1(), state, actions, card.recipes.associateBy { it.id })
-            PhaseTab.Phase2 -> Phase2Tablet(card.phase2(), state, actions)
+            PhaseTab.Phase2 -> Phase2Tablet(card.phase2(), state, actions, voiceUi)
         }
     }
 }
@@ -128,7 +130,12 @@ private fun Phase1Tablet(
 }
 
 @Composable
-private fun Phase2Tablet(phase: Phase.Phase2?, state: CookUiState, actions: CookActions) {
+private fun Phase2Tablet(
+    phase: Phase.Phase2?,
+    state: CookUiState,
+    actions: CookActions,
+    voiceUi: VoiceUi,
+) {
     if (phase == null || phase.steps.isEmpty()) return
     val steps = phase.steps
     val current = steps.getOrNull(state.currentStepIndex) ?: return
@@ -226,11 +233,15 @@ private fun Phase2Tablet(phase: Phase.Phase2?, state: CookUiState, actions: Cook
                 .background(MiseTokens.colors.surface)
                 .padding(20.dp),
         ) {
-            Text(
-                "ACTIVE TIMERS · ${state.activeTimers.size} RUNNING",
-                style = MiseTokens.text.micro,
-                color = MiseTokens.colors.ink3,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "ACTIVE TIMERS · ${state.activeTimers.size} RUNNING",
+                    style = MiseTokens.text.micro,
+                    color = MiseTokens.colors.ink3,
+                )
+                Spacer(Modifier.weight(1f))
+                VoiceMicButton(voiceUi)
+            }
             Spacer(Modifier.height(12.dp))
             state.activeTimers.forEach { t ->
                 TimerCardLarge(

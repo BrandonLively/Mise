@@ -38,3 +38,9 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Vosk speech recognition model (downloaded separately)
+app/src/main/assets/vosk-model-en/
+
+# Local planning/scratch docs
+voice-navigation-plan.html

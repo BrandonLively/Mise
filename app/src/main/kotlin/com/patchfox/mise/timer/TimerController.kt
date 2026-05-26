@@ -113,6 +113,11 @@ class TimerController @Inject constructor(
         TimerForegroundService.maybeStop(context, _timers.value.size)
     }
 
+    /** Dismisses every timer that has already finished (reached 0:00). */
+    suspend fun dismissAllDone() {
+        _timers.value.filter { it.remainingSeconds <= 0 }.map { it.id }.forEach { dismiss(it) }
+    }
+
     /**
      * Tack on one extra minute. Cooking ranges ("15–17 minutes") mean the user
      * often wants a quick extension without re-arming a brand-new timer. Tapping

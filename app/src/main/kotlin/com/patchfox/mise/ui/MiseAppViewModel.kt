@@ -7,6 +7,8 @@ import com.patchfox.mise.timer.TimerController
 import com.patchfox.mise.ui.component.PhaseTab
 import com.patchfox.mise.ui.state.CookSessionState
 import com.patchfox.mise.ui.theme.RecipeColor
+import com.patchfox.mise.voice.VoiceCommand
+import com.patchfox.mise.voice.VoiceCommandController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,7 +36,19 @@ class MiseAppViewModel @Inject constructor(
     auth: AuthRepository,
     private val timerController: TimerController,
     cookSession: CookSessionState,
+    voiceController: VoiceCommandController,
 ) : ViewModel() {
+
+    init {
+        // "stop timer" must silence a ringing alarm from any screen, so it's
+        // routed here at app scope rather than in CookViewModel (which only
+        // exists while the Cook screen is composed).
+        viewModelScope.launch {
+            voiceController.commands.collect { command ->
+                if (command == VoiceCommand.StopTimers) timerController.dismissAllDone()
+            }
+        }
+    }
 
     val authState: StateFlow<AuthUiState> = auth.currentUser
         .map { AuthUiState(signedIn = it != null) }

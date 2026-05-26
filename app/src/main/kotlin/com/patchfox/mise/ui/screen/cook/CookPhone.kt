@@ -66,11 +66,18 @@ import com.patchfox.mise.ui.component.PhaseTabs
 import com.patchfox.mise.ui.component.StepProgressBar
 import com.patchfox.mise.ui.component.StepThumbStrip
 import com.patchfox.mise.ui.component.TimerChip
+import com.patchfox.mise.ui.component.VoiceMicButton
 import com.patchfox.mise.ui.theme.MiseTokens
 import com.patchfox.mise.ui.theme.recipe
+import com.patchfox.mise.voice.VoiceUi
 
 @Composable
-fun CookPhone(state: CookUiState, actions: CookActions, onViewSummary: () -> Unit) {
+fun CookPhone(
+    state: CookUiState,
+    actions: CookActions,
+    onViewSummary: () -> Unit,
+    voiceUi: VoiceUi = VoiceUi.OFF,
+) {
     if (state.card == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (state.loading) CircularProgressIndicator()
@@ -117,7 +124,12 @@ fun CookPhone(state: CookUiState, actions: CookActions, onViewSummary: () -> Uni
         when (state.selectedPhase) {
             PhaseTab.Phase0 -> Phase0View(card.phase0())
             PhaseTab.Phase1 -> Phase1View(card.phase1(), card.recipes.associateBy { it.id }, state, actions)
-            PhaseTab.Phase2 -> Phase2View(card.phase2(), state, actions, showHandsOff = true, onViewSummary = onViewSummary)
+            PhaseTab.Phase2 -> Phase2View(
+                card.phase2(), state, actions,
+                showHandsOff = true,
+                onViewSummary = onViewSummary,
+                voiceUi = voiceUi,
+            )
         }
     }
 }
@@ -202,6 +214,7 @@ private fun Phase2View(
     actions: CookActions,
     showHandsOff: Boolean,
     onViewSummary: () -> Unit,
+    voiceUi: VoiceUi,
 ) {
     if (phase == null || phase.steps.isEmpty()) return
     val steps = phase.steps
@@ -234,6 +247,8 @@ private fun Phase2View(
                 style = MiseTokens.text.micro,
                 color = current?.recipeColor?.let { MiseTokens.colors.recipe(it) } ?: MiseTokens.colors.ink3,
             )
+            Spacer(Modifier.weight(1f))
+            VoiceMicButton(voiceUi)
         }
         Spacer(Modifier.height(10.dp))
 

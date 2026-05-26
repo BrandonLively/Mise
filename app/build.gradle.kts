@@ -142,6 +142,9 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    // Vosk — offline speech recognition for voice navigation
+    implementation(libs.vosk.android)
+
     // Unit tests
     testImplementation(libs.junit5.jupiter)
     testRuntimeOnly(libs.junit5.jupiter.engine)

@@ -15,6 +15,9 @@ import com.patchfox.mise.domain.usecase.GetCurrentCookCardUseCase
 import com.patchfox.mise.timer.TimerController
 import com.patchfox.mise.ui.component.PhaseTab
 import com.patchfox.mise.ui.state.CookSessionState
+import com.patchfox.mise.voice.VoiceCommand
+import com.patchfox.mise.voice.VoiceCommandController
+import com.patchfox.mise.voice.VoiceState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -56,11 +59,16 @@ class CookViewModel @Inject constructor(
     private val startedTimer: StartedTimerRepository,
     private val timerController: TimerController,
     private val cookSession: CookSessionState,
+    private val voiceController: VoiceCommandController,
 ) : ViewModel() {
 
     private val selectedPhase = MutableStateFlow(PhaseTab.Phase2)
     private val currentStepIndex = MutableStateFlow(0)
     private var hasAutoAdvancedFromPhase1 = false
+
+    /** Mic indicator state + the user's opt-in preference, for the Cook UI. */
+    val voiceState: StateFlow<VoiceState> = voiceController.state
+    val voiceEnabled: StateFlow<Boolean> = voiceController.enabled
 
     init {
         // Mirror the selected phase into the app-wide session state so the
@@ -70,11 +78,26 @@ class CookViewModel @Inject constructor(
         viewModelScope.launch {
             selectedPhase.collect { cookSession.setPhase(it) }
         }
+        // Recognized voice commands drive the same actions as swipe/tap.
+        // StopTimers is intentionally NOT handled here — MiseAppViewModel owns
+        // it so "stop timer" silences a ringing alarm from any screen.
+        viewModelScope.launch {
+            voiceController.commands.collect { command ->
+                when (command) {
+                    VoiceCommand.Back -> advanceStep(-1)
+                    VoiceCommand.Forward -> advanceStep(1)
+                    VoiceCommand.StartTimer -> startTimerForCurrentStep()
+                    VoiceCommand.StopTimers -> Unit
+                }
+            }
+        }
     }
 
     fun setCookScreenVisible(visible: Boolean) {
         cookSession.setCookScreenVisible(visible)
     }
+
+    fun setVoiceEnabled(enabled: Boolean) = voiceController.setEnabled(enabled)
 
     fun extendTimer(timerId: String) {
         viewModelScope.launch { timerController.extendByOneMinute(timerId) }
