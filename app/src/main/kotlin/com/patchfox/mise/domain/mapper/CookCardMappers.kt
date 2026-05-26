@@ -2,6 +2,8 @@ package com.patchfox.mise.domain.mapper
 
 import com.patchfox.mise.data.cookcard.CookCardParser
 import com.patchfox.mise.data.dto.CookCardDto
+import com.patchfox.mise.data.dto.InstructionIngredientDto
+import com.patchfox.mise.data.dto.InstructionStepDto
 import com.patchfox.mise.data.dto.MiseBowlDto
 import com.patchfox.mise.data.dto.Phase0Dto
 import com.patchfox.mise.data.dto.Phase1Dto
@@ -26,6 +28,8 @@ import com.patchfox.mise.domain.model.DayOfWeek
 import com.patchfox.mise.domain.model.EmojiLegendEntry
 import com.patchfox.mise.domain.model.Household
 import com.patchfox.mise.domain.model.Ingredient
+import com.patchfox.mise.domain.model.InstructionIngredient
+import com.patchfox.mise.domain.model.InstructionStep
 import com.patchfox.mise.domain.model.Macro
 import com.patchfox.mise.domain.model.MiseBowl
 import com.patchfox.mise.domain.model.MiseReference
@@ -182,6 +186,32 @@ private fun JsonElement.parseStringList(): List<String> = when (this) {
     else -> emptyList()
 }
 
+/**
+ * Parses a v2-shape `InstructionStep[]` field. Elements that aren't valid
+ * objects are silently skipped — keeps a malformed step from killing the
+ * whole card render.
+ */
+private fun JsonElement.parseInstructionStepList(): List<InstructionStep> {
+    if (this !is JsonArray) return emptyList()
+    return mapNotNull { el ->
+        val obj = el as? JsonObject ?: return@mapNotNull null
+        val dto = runCatching {
+            CookCardParser.json.decodeFromJsonElement(InstructionStepDto.serializer(), obj)
+        }.getOrNull() ?: return@mapNotNull null
+        InstructionStep(
+            prefix = dto.instructionPrefix,
+            ingredients = dto.ingredients?.map { it.toDomain() },
+        )
+    }
+}
+
+private fun InstructionIngredientDto.toDomain() = InstructionIngredient(
+    name = name,
+    quantity = quantity,
+    unit = unit,
+    preparation = preparation,
+)
+
 private fun ReheatSpecDto.toDomain() = ReheatSpec(
     method = method,
     timeSeconds = timeSeconds?.toInt(),
@@ -247,7 +277,7 @@ private fun Phase0Dto.toDomain() = Phase.Phase0(
         Phase0Step(
             id = StepId(s.id),
             stepNumber = s.stepNumber,
-            task = s.task,
+            task = s.task.parseInstructionStepList(),
             description = s.description,
             recipeIds = s.recipeIds.map(::RecipeId),
             estimatedActiveMinutes = s.estimatedActiveMinutes?.toInt(),
@@ -264,7 +294,7 @@ private fun Phase1Dto.toDomain() = Phase.Phase1(
     purpose = purpose,
     smellHierarchyNote = smellHierarchyNote,
     bowls = bowls.map { it.toDomain() },
-    standalone = standalone.map { MiseStandalone(it.label, it.prep?.parseStringList().orEmpty()) },
+    standalone = standalone.map { MiseStandalone(it.label, it.prep?.parseInstructionStepList().orEmpty()) },
 )
 
 private fun MiseBowlDto.toDomain(): MiseBowl {
@@ -287,7 +317,7 @@ private fun MiseBowlDto.toDomain(): MiseBowl {
                 count = it.count,
             )
         },
-        instruction = instruction?.parseStringList().orEmpty(),
+        instruction = instruction?.parseInstructionStepList().orEmpty(),
         notes = notes,
     )
 }
@@ -308,7 +338,7 @@ private fun Phase2Dto.toDomain(recipeById: Map<String, Recipe>) = Phase.Phase2(
             recipeName = s.recipeName,
             recipeEmoji = s.recipeEmoji,
             recipeColor = recipe?.color,
-            task = parseTaskField(s),
+            task = s.task.parseInstructionStepList(),
             miseReferences = s.miseReferences.map { r ->
                 MiseReference(
                     bowlId = r.bowlId?.let(::BowlId),
@@ -325,15 +355,6 @@ private fun Phase2Dto.toDomain(recipeById: Map<String, Recipe>) = Phase.Phase2(
         )
     },
 )
-
-private fun parseTaskField(step: Phase2StepDto): List<String> = when (val t = step.task) {
-    is JsonArray -> t.mapNotNull { (it as? JsonPrimitive)?.contentOrNull() }
-    is JsonPrimitive -> {
-        val raw = t.contentOrNull().orEmpty()
-        raw.split(';', '\n').map { it.trim() }.filter { it.isNotBlank() }
-    }
-    else -> emptyList()
-}
 
 private fun TimerDto.toDomain() = StepTimer(
     title = label,

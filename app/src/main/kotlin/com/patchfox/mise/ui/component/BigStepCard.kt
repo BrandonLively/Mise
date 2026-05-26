@@ -101,14 +101,13 @@ fun BigStepCard(
                         Spacer(Modifier.height(14.dp))
                     }
 
-                    // Task bullets
-                    step.task.forEach { line ->
-                        Row(modifier = Modifier.padding(vertical = 4.dp)) {
-                            Text("·", style = MiseTokens.text.h3, color = MiseTokens.colors.ink3)
-                            Spacer(Modifier.width(10.dp))
-                            Text(line, style = MiseTokens.text.h3, color = MiseTokens.colors.ink)
-                        }
-                    }
+                    // Task bullets — heading prefix + nested ingredient sub-bullets
+                    InstructionStepBlock(
+                        steps = step.task,
+                        headerStyle = MiseTokens.text.h3,
+                        ingredientStyle = MiseTokens.text.body,
+                        stepSpacing = 14,
+                    )
 
                     if (step.miseReferences.isNotEmpty()) {
                         Spacer(Modifier.height(18.dp))

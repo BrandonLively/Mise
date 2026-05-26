@@ -1,6 +1,6 @@
 {
   "$schema": "https://example.com/meal-prep-cook-card.v1.schema.json",
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "2.0.0",
   "meta": {
     "id": "2026-05-24-latin-tex-mex",
     "theme": "Latin / Tex-Mex",
@@ -709,7 +709,10 @@
             "id": "p0-step-1",
             "stepNumber": 1,
             "task": [
-              "White rice for Chicken Burrito Bowl"
+              {
+                "instructionPrefix": "White rice for Chicken Burrito Bowl",
+                "ingredients": null
+              }
             ],
             "description": "Rinse 2¼ cups dry long-grain white rice (~430g) until water runs clear. Transfer to rice cooker, add water per cooker's white-rice line + ½ tsp salt. Start.",
             "recipeIds": [
@@ -727,7 +730,10 @@
             "id": "p0-step-2",
             "stepNumber": 2,
             "task": [
-              "Jasmine rice for Sheet-Pan Shrimp Fajitas"
+              {
+                "instructionPrefix": "Jasmine rice for Sheet-Pan Shrimp Fajitas",
+                "ingredients": null
+              }
             ],
             "description": "Rinse 1¾ cups dry jasmine (~325g) until clear. Add to a medium saucepan with 2¼ cups water + ½ tsp salt. Bring to a boil, cover, reduce to lowest heat. Simmer 18 min, rest 5 min off heat.",
             "recipeIds": [
@@ -793,7 +799,12 @@
                 "qty": "pinch"
               }
             ],
-            "instruction": "Whisk hard, rest 5 min, whisk again, portion into 7 × 6 oz jars, refrigerate. Sets fully by Monday morning — first dessert serving available Monday lunch / dinner.",
+            "instruction": [
+              {
+                "instructionPrefix": "Whisk hard, rest 5 min, whisk again, portion into 7 × 6 oz jars, refrigerate. Sets fully by Monday morning — first dessert serving available Monday lunch / dinner.",
+                "ingredients": null
+              }
+            ],
             "notes": []
           },
           {
@@ -808,7 +819,12 @@
                 "grams": 50
               }
             ],
-            "instruction": "Toast in dry skillet 1-2 min, medium heat, shaking constantly. Cool, transfer to small jar."
+            "instruction": [
+              {
+                "instructionPrefix": "Toast in dry skillet 1-2 min, medium heat, shaking constantly. Cool, transfer to small jar.",
+                "ingredients": null
+              }
+            ]
           },
           {
             "id": "bowl-3-pico",
@@ -846,7 +862,12 @@
                 "qty": "½ tsp"
               }
             ],
-            "instruction": "Combine in a bowl, toss, refrigerate. Flavors will meld overnight before Monday's first meal.",
+            "instruction": [
+              {
+                "instructionPrefix": "Combine in a bowl, toss, refrigerate. Flavors will meld overnight before Monday's first meal.",
+                "ingredients": null
+              }
+            ],
             "notes": [
               "Has allium (red onion + jalapeño); ordered after non-allium bowls."
             ]
@@ -894,7 +915,12 @@
                 "qty": "1.5 tsp"
               }
             ],
-            "instruction": "Combine in a medium bowl; the spice rub stays on top until cook."
+            "instruction": [
+              {
+                "instructionPrefix": "Combine in a medium bowl; the spice rub stays on top until cook.",
+                "ingredients": null
+              }
+            ]
           },
           {
             "id": "bowl-5-fajita-peppers",
@@ -927,7 +953,12 @@
                 "qty": "¾ tsp"
               }
             ],
-            "instruction": "Combine peppers and onion in a medium bowl. Olive oil and salt drizzle at cook time on the sheet pan."
+            "instruction": [
+              {
+                "instructionPrefix": "Combine peppers and onion in a medium bowl. Olive oil and salt drizzle at cook time on the sheet pan.",
+                "ingredients": null
+              }
+            ]
           },
           {
             "id": "bowl-6-burrito-veg",
@@ -950,7 +981,12 @@
                 "qty": "½ tsp"
               }
             ],
-            "instruction": "Combine in a medium bowl; ready to sauté."
+            "instruction": [
+              {
+                "instructionPrefix": "Combine in a medium bowl; ready to sauté.",
+                "ingredients": null
+              }
+            ]
           },
           {
             "id": "bowl-7-cilantro-garnish",
@@ -968,7 +1004,12 @@
                 "grams": 30
               }
             ],
-            "instruction": "Single bowl; portion across recipes during assembly."
+            "instruction": [
+              {
+                "instructionPrefix": "Single bowl; portion across recipes during assembly.",
+                "ingredients": null
+              }
+            ]
           },
           {
             "id": "bowl-8-shrimp-spice",
@@ -1016,7 +1057,12 @@
                 "ml": 15
               }
             ],
-            "instruction": "Toss shrimp with all in a large bowl; let sit during Phase 2 prep (10-15 min light marinade)."
+            "instruction": [
+              {
+                "instructionPrefix": "Toss shrimp with all in a large bowl; let sit during Phase 2 prep (10-15 min light marinade).",
+                "ingredients": null
+              }
+            ]
           },
           {
             "id": "bowl-9-chicken-marinade",
@@ -1065,7 +1111,12 @@
                 "ml": 15
               }
             ],
-            "instruction": "Toss in a large bowl or gallon zip bag; refrigerate. Should be marinating from Saturday night per the schedule. If you didn't pre-marinate, give the chicken at least 30 min before air-frying — though 4 hr is much better.",
+            "instruction": [
+              {
+                "instructionPrefix": "Toss in a large bowl or gallon zip bag; refrigerate. Should be marinating from Saturday night per the schedule. If you didn't pre-marinate, give the chicken at least 30 min before air-frying — though 4 hr is much better.",
+                "ingredients": null
+              }
+            ],
             "notes": [
               "Chicken should already be marinating from Saturday night per the schedule."
             ]
@@ -1074,35 +1125,75 @@
         "standalone": [
           {
             "label": "6 cans of black beans (3 for Chicken Burrito Bowl, 3 for Black Bean Enchilada Skillet)",
-            "prep": "drained in colander, rinsed"
+            "prep": [
+              {
+                "instructionPrefix": "drained in colander, rinsed",
+                "ingredients": null
+              }
+            ]
           },
           {
             "label": "1 large can (or 2 × 10 oz) enchilada sauce",
-            "prep": "opened, measuring pitcher"
+            "prep": [
+              {
+                "instructionPrefix": "opened, measuring pitcher",
+                "ingredients": null
+              }
+            ]
           },
           {
             "label": "Corn tortillas (17 total: 7 for Sheet-Pan Shrimp Fajitas, 10 for Black Bean Enchilada Skillet)",
-            "prep": "in their bag"
+            "prep": [
+              {
+                "instructionPrefix": "in their bag",
+                "ingredients": null
+              }
+            ]
           },
           {
             "label": "Mexican blend cheese (14 oz needed across Chicken Burrito Bowl and Black Bean Enchilada Skillet)",
-            "prep": "straight from the 1 lb bag"
+            "prep": [
+              {
+                "instructionPrefix": "straight from the 1 lb bag",
+                "ingredients": null
+              }
+            ]
           },
           {
             "label": "Greek yogurt 16 oz tub",
-            "prep": "stays in fridge; dollop per serving"
+            "prep": [
+              {
+                "instructionPrefix": "stays in fridge; dollop per serving",
+                "ingredients": null
+              }
+            ]
           },
           {
             "label": "Avocados (2)",
-            "prep": "counter, soft-pressing for ripeness"
+            "prep": [
+              {
+                "instructionPrefix": "counter, soft-pressing for ripeness",
+                "ingredients": null
+              }
+            ]
           },
           {
             "label": "Eggs (7 large, in carton)",
-            "prep": "fried fresh per serving at reheat"
+            "prep": [
+              {
+                "instructionPrefix": "fried fresh per serving at reheat",
+                "ingredients": null
+              }
+            ]
           },
           {
             "label": "Limes (5-6)",
-            "prep": "counter or fridge"
+            "prep": [
+              {
+                "instructionPrefix": "counter or fridge",
+                "ingredients": null
+              }
+            ]
           }
         ]
       },
@@ -1122,8 +1213,14 @@
             "recipeName": "Black Bean Enchilada Skillet",
             "recipeEmoji": "🌶️",
             "task": [
-              "Heat 2 tsp oil in 12\" skillet, medium-high",
-              "Add Bowl 4 (enchilada veg + spice rub, ~580g)"
+              {
+                "instructionPrefix": "Heat 2 tsp oil in 12\" skillet, medium-high",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Add Bowl 4 (enchilada veg + spice rub, ~580g)",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1146,8 +1243,14 @@
             "recipeName": "Black Bean Enchilada Skillet",
             "recipeEmoji": "🌶️",
             "task": [
-              "Veg should be softening",
-              "Stir in 3 cans drained black beans + 1 cup frozen corn (~175g)"
+              {
+                "instructionPrefix": "Veg should be softening",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Stir in 3 cans drained black beans + 1 cup frozen corn (~175g)",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1175,7 +1278,10 @@
             "recipeName": "Sheet-Pan Shrimp Fajitas",
             "recipeEmoji": "🍤",
             "task": [
-              "Oven preheat to 425°F"
+              {
+                "instructionPrefix": "Oven preheat to 425°F",
+                "ingredients": null
+              }
             ],
             "miseReferences": [],
             "equipmentUsed": [
@@ -1200,8 +1306,14 @@
             "recipeName": "Black Bean Enchilada Skillet",
             "recipeEmoji": "🌶️",
             "task": [
-              "Pour in enchilada sauce (~560g, Bowl/can)",
-              "Stir, bring to low simmer"
+              {
+                "instructionPrefix": "Pour in enchilada sauce (~560g, Bowl/can)",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Stir, bring to low simmer",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1225,9 +1337,18 @@
             "recipeName": "Black Bean Enchilada Skillet",
             "recipeEmoji": "🌶️",
             "task": [
-              "Tear 10 corn tortillas into 1\" pieces",
-              "Fold into the saucy mix",
-              "Simmer 3-4 min"
+              {
+                "instructionPrefix": "Tear 10 corn tortillas into 1\" pieces",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Fold into the saucy mix",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Simmer 3-4 min",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1257,9 +1378,18 @@
             "recipeName": "Sheet-Pan Shrimp Fajitas",
             "recipeEmoji": "🍤",
             "task": [
-              "Spread Bowl 5 (peppers + onions, ~980g) on sheet pan",
-              "Drizzle 1.5 Tbsp olive oil",
-              "Season with salt"
+              {
+                "instructionPrefix": "Spread Bowl 5 (peppers + onions, ~980g) on sheet pan",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Drizzle 1.5 Tbsp olive oil",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Season with salt",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1284,8 +1414,14 @@
             "recipeName": "Sheet-Pan Shrimp Fajitas",
             "recipeEmoji": "🍤",
             "task": [
-              "Sheet pan into oven",
-              "Set timer 12 min for peppers"
+              {
+                "instructionPrefix": "Sheet pan into oven",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Set timer 12 min for peppers",
+                "ingredients": null
+              }
             ],
             "miseReferences": [],
             "equipmentUsed": [
@@ -1311,9 +1447,18 @@
             "recipeName": "Black Bean Enchilada Skillet",
             "recipeEmoji": "🌶️",
             "task": [
-              "Turn off enchilada heat",
-              "Sprinkle ~140g cheese (reserve 55g for daily reheat) across surface",
-              "Cover skillet 2 min to melt"
+              {
+                "instructionPrefix": "Turn off enchilada heat",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Sprinkle ~140g cheese (reserve 55g for daily reheat) across surface",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Cover skillet 2 min to melt",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1343,7 +1488,10 @@
             "recipeName": "Chicken Burrito Bowl",
             "recipeEmoji": "🍗",
             "task": [
-              "Air fryer preheat to 400°F"
+              {
+                "instructionPrefix": "Air fryer preheat to 400°F",
+                "ingredients": null
+              }
             ],
             "miseReferences": [],
             "equipmentUsed": [
@@ -1368,9 +1516,18 @@
             "recipeName": "Black Bean Enchilada Skillet",
             "recipeEmoji": "🌶️",
             "task": [
-              "Pull cheese-melted skillet off heat",
-              "Portion ~480g per container into 7 × 16 oz containers",
-              "Cool while you cook the rest"
+              {
+                "instructionPrefix": "Pull cheese-melted skillet off heat",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Portion ~480g per container into 7 × 16 oz containers",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Cool while you cook the rest",
+                "ingredients": null
+              }
             ],
             "miseReferences": [],
             "equipmentUsed": [
@@ -1390,9 +1547,18 @@
             "recipeName": "Chicken Burrito Bowl",
             "recipeEmoji": "🍗",
             "task": [
-              "Pull chicken from marinade (Bowl 9), shake off excess",
-              "Load air fryer (~½ lb per batch)",
-              "Air-fry 12-15 min at 400°F, flip halfway"
+              {
+                "instructionPrefix": "Pull chicken from marinade (Bowl 9), shake off excess",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Load air fryer (~½ lb per batch)",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Air-fry 12-15 min at 400°F, flip halfway",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1424,10 +1590,22 @@
             "recipeName": "Sheet-Pan Shrimp Fajitas",
             "recipeEmoji": "🍤",
             "task": [
-              "Peppers crisp-tender from oven (12 min in)",
-              "Clear center; tip Bowl 8 (shrimp + spice rub) onto cleared space",
-              "Toss with residual oil",
-              "Return to oven 5-7 min for shrimp"
+              {
+                "instructionPrefix": "Peppers crisp-tender from oven (12 min in)",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Clear center; tip Bowl 8 (shrimp + spice rub) onto cleared space",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Toss with residual oil",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Return to oven 5-7 min for shrimp",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1460,9 +1638,18 @@
             "recipeName": "Sheet-Pan Shrimp Fajitas",
             "recipeEmoji": "🍤",
             "task": [
-              "Shrimp pink and curled into a \"C\" — pull sheet pan from oven",
-              "Squeeze ½ lime over the pan",
-              "Set aside"
+              {
+                "instructionPrefix": "Shrimp pink and curled into a \"C\" — pull sheet pan from oven",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Squeeze ½ lime over the pan",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Set aside",
+                "ingredients": null
+              }
             ],
             "miseReferences": [],
             "equipmentUsed": [
@@ -1481,9 +1668,18 @@
             "recipeName": "Chicken Burrito Bowl",
             "recipeEmoji": "🍗",
             "task": [
-              "Pull chicken batch 1",
-              "Load batch 2",
-              "Air fry another 12-15 min"
+              {
+                "instructionPrefix": "Pull chicken batch 1",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Load batch 2",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Air fry another 12-15 min",
+                "ingredients": null
+              }
             ],
             "miseReferences": [],
             "equipmentUsed": [
@@ -1508,9 +1704,18 @@
             "recipeName": "Chicken Burrito Bowl",
             "recipeEmoji": "🍗",
             "task": [
-              "Heat 1 tsp olive oil in skillet, medium-high",
-              "Tip Bowl 6 (corn + red pepper, ~440g) into pan",
-              "Sauté 4-5 min"
+              {
+                "instructionPrefix": "Heat 1 tsp olive oil in skillet, medium-high",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Tip Bowl 6 (corn + red pepper, ~440g) into pan",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Sauté 4-5 min",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1542,8 +1747,14 @@
             "recipeName": "Chicken Burrito Bowl",
             "recipeEmoji": "🍗",
             "task": [
-              "Pull burrito-bowl veg off heat",
-              "Season with a pinch of cumin + salt"
+              {
+                "instructionPrefix": "Pull burrito-bowl veg off heat",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Season with a pinch of cumin + salt",
+                "ingredients": null
+              }
             ],
             "miseReferences": [],
             "equipmentUsed": [
@@ -1562,8 +1773,14 @@
             "recipeName": "Chicken Burrito Bowl",
             "recipeEmoji": "🍗",
             "task": [
-              "Drain 3 cans of black beans, rinse",
-              "Warm in saucepan with cumin + salt (60s in microwave works)"
+              {
+                "instructionPrefix": "Drain 3 cans of black beans, rinse",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Warm in saucepan with cumin + salt (60s in microwave works)",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1592,7 +1809,10 @@
             "recipeName": "Chicken Burrito Bowl",
             "recipeEmoji": "🍗",
             "task": [
-              "Toss cooked white rice with chopped cilantro + 1 lime's worth of juice"
+              {
+                "instructionPrefix": "Toss cooked white rice with chopped cilantro + 1 lime's worth of juice",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1617,9 +1837,18 @@
             "recipeName": "Sheet-Pan Shrimp Fajitas",
             "recipeEmoji": "🍤",
             "task": [
-              "Portion into 7 × 12 oz containers: ~118g jasmine rice (cilantro-lime tossed) + ~140g pepper/onion sauté + ~180g cooked shrimp",
-              "Tuck 1 corn tortilla alongside each",
-              "Greek yogurt to a separate small jar"
+              {
+                "instructionPrefix": "Portion into 7 × 12 oz containers: ~118g jasmine rice (cilantro-lime tossed) + ~140g pepper/onion sauté + ~180g cooked shrimp",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Tuck 1 corn tortilla alongside each",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Greek yogurt to a separate small jar",
+                "ingredients": null
+              }
             ],
             "miseReferences": [],
             "equipmentUsed": [
@@ -1638,9 +1867,18 @@
             "recipeName": "Chicken Burrito Bowl",
             "recipeEmoji": "🍗",
             "task": [
-              "Pull chicken batch 2",
-              "Rest 5 min",
-              "Slice both batches (~160g cooked chicken per serving)"
+              {
+                "instructionPrefix": "Pull chicken batch 2",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Rest 5 min",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Slice both batches (~160g cooked chicken per serving)",
+                "ingredients": null
+              }
             ],
             "miseReferences": [],
             "equipmentUsed": [
@@ -1663,8 +1901,14 @@
             "recipeName": "Chicken Burrito Bowl",
             "recipeEmoji": "🍗",
             "task": [
-              "Portion into 7 × 16 oz containers: ~158g cooked rice + ~160g sliced chicken + ½ cup burrito-bowl veg + black beans (~½ cup) + 1 oz cheese sprinkled hot",
-              "Pico (~60g) and Greek yogurt (1 Tbsp) to separate small jars per serving"
+              {
+                "instructionPrefix": "Portion into 7 × 16 oz containers: ~158g cooked rice + ~160g sliced chicken + ½ cup burrito-bowl veg + black beans (~½ cup) + 1 oz cheese sprinkled hot",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Pico (~60g) and Greek yogurt (1 Tbsp) to separate small jars per serving",
+                "ingredients": null
+              }
             ],
             "miseReferences": [
               {
@@ -1687,10 +1931,22 @@
             "recipeName": "All recipes",
             "recipeEmoji": "✅",
             "task": [
-              "All 4 recipes portioned",
-              "Label, refrigerate",
-              "Wash skillet and air fryer basket",
-              "First meals available Monday lunch — all sauces/pico/cheese melded by then"
+              {
+                "instructionPrefix": "All 4 recipes portioned",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Label, refrigerate",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "Wash skillet and air fryer basket",
+                "ingredients": null
+              },
+              {
+                "instructionPrefix": "First meals available Monday lunch — all sauces/pico/cheese melded by then",
+                "ingredients": null
+              }
             ],
             "miseReferences": [],
             "equipmentUsed": [],

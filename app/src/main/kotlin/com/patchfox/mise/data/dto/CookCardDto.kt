@@ -173,7 +173,12 @@ data class Phase0Dto(
 data class Phase0StepDto(
     val id: String,
     val stepNumber: Int,
-    val task: List<String>,
+    /**
+     * v2 schema: array of `InstructionStep` objects. Parsed flexibly in the
+     * mapper via [JsonElement] so unexpected shapes are skipped rather than
+     * crashing the whole card.
+     */
+    val task: JsonElement,
     val description: String,
     val recipeIds: List<String> = emptyList(),
     val estimatedActiveMinutes: Double? = null,
@@ -199,10 +204,7 @@ data class MiseBowlDto(
     val name: String,
     val forRecipeId: JsonElement,
     val ingredients: List<BowlIngredientDto> = emptyList(),
-    /**
-     * Either a single string (legacy schema) or an array of strings (current
-     * schema). Parsed flexibly in the mapper — see [parseStringList].
-     */
+    /** v2 schema: array of `InstructionStep` objects. */
     val instruction: JsonElement? = null,
     val notes: List<String> = emptyList(),
 )
@@ -219,8 +221,22 @@ data class BowlIngredientDto(
 @Serializable
 data class MiseStandaloneDto(
     val label: String,
-    /** Either a single string (legacy schema) or an array of strings (current). */
+    /** v2 schema: array of `InstructionStep` objects. */
     val prep: JsonElement? = null,
+)
+
+@Serializable
+data class InstructionStepDto(
+    val instructionPrefix: String,
+    val ingredients: List<InstructionIngredientDto>? = null,
+)
+
+@Serializable
+data class InstructionIngredientDto(
+    val name: String,
+    val quantity: String? = null,
+    val unit: String? = null,
+    val preparation: String? = null,
 )
 
 @Serializable

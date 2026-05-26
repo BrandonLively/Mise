@@ -158,7 +158,13 @@ private fun Phase0View(phase: Phase.Phase0?) {
                         Text(step.estimatedRuntime ?: "", style = MiseTokens.text.clock.copy(fontSize = MiseTokens.text.small.fontSize), color = MiseTokens.colors.ink3)
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text(step.task.firstOrNull().orEmpty(), style = MiseTokens.text.h4, color = MiseTokens.colors.ink)
+                    if (step.task.isNotEmpty()) {
+                        com.patchfox.mise.ui.component.InstructionStepBlock(
+                            steps = step.task,
+                            headerStyle = MiseTokens.text.h4,
+                            ingredientStyle = MiseTokens.text.small,
+                        )
+                    }
                     Spacer(Modifier.height(6.dp))
                     Text(step.description, style = MiseTokens.text.small, color = MiseTokens.colors.ink2)
                 }

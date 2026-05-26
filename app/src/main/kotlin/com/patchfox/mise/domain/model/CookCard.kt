@@ -194,7 +194,7 @@ sealed class Phase {
 data class Phase0Step(
     val id: StepId,
     val stepNumber: Int,
-    val task: List<String>,
+    val task: List<InstructionStep>,
     val description: String,
     val recipeIds: List<RecipeId>,
     val estimatedActiveMinutes: Int?,
@@ -208,7 +208,7 @@ data class MiseBowl(
     val name: String,
     val forRecipeIds: List<RecipeId>,
     val ingredients: List<BowlIngredient>,
-    val instruction: List<String>,
+    val instruction: List<InstructionStep>,
     val notes: List<String>,
 )
 
@@ -220,7 +220,7 @@ data class BowlIngredient(
     val count: Double?,
 )
 
-data class MiseStandalone(val label: String, val prep: List<String>)
+data class MiseStandalone(val label: String, val prep: List<InstructionStep>)
 
 data class CookStep(
     val id: StepId,
@@ -231,12 +231,30 @@ data class CookStep(
     val recipeName: String?,
     val recipeEmoji: String?,
     val recipeColor: RecipeColor?,
-    val task: List<String>,
+    val task: List<InstructionStep>,
     val miseReferences: List<MiseReference>,
     val equipmentUsed: List<String>,
     val handsOff: List<String>,
     val isFinalStep: Boolean,
     val timer: StepTimer?,
+)
+
+/**
+ * One bullet inside a multi-step instruction: an action prefix plus the
+ * ingredients introduced at that step. [ingredients] is null when the step
+ * is action-only (e.g. "Whisk well until smooth") and references items
+ * already prepped in a prior step.
+ */
+data class InstructionStep(
+    val prefix: String,
+    val ingredients: List<InstructionIngredient>?,
+)
+
+data class InstructionIngredient(
+    val name: String,
+    val quantity: String?,
+    val unit: String?,
+    val preparation: String?,
 )
 
 data class MiseReference(

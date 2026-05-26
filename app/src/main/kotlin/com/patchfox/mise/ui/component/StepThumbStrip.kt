@@ -74,7 +74,7 @@ fun StepThumbStrip(
                     }
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        step.task.firstOrNull().orEmpty(),
+                        step.task.firstOrNull()?.prefix.orEmpty(),
                         style = MiseTokens.text.small.copy(fontSize = MiseTokens.text.small.fontSize),
                         color = MiseTokens.colors.ink2,
                         maxLines = 2,

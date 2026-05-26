@@ -94,7 +94,13 @@ private fun Phase0Tablet(phase: Phase.Phase0?) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text("STEP ${step.stepNumber}", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
                     Spacer(Modifier.height(6.dp))
-                    Text(step.task.firstOrNull().orEmpty(), style = MiseTokens.text.h3, color = MiseTokens.colors.ink)
+                    if (step.task.isNotEmpty()) {
+                        com.patchfox.mise.ui.component.InstructionStepBlock(
+                            steps = step.task,
+                            headerStyle = MiseTokens.text.h3,
+                            ingredientStyle = MiseTokens.text.body,
+                        )
+                    }
                     Spacer(Modifier.height(8.dp))
                     Text(step.description, style = MiseTokens.text.body, color = MiseTokens.colors.ink2)
                 }
@@ -185,7 +191,7 @@ private fun Phase2Tablet(
                             if (!step.recipeEmoji.isNullOrBlank()) Text(step.recipeEmoji!!, style = MiseTokens.text.small)
                             Spacer(Modifier.width(4.dp))
                             Text(
-                                step.task.firstOrNull().orEmpty(),
+                                step.task.firstOrNull()?.prefix.orEmpty(),
                                 style = MiseTokens.text.small,
                                 color = MiseTokens.colors.ink2,
                                 maxLines = 2,

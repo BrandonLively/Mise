@@ -34,7 +34,6 @@ fun MiseChecklistRow(
     modifier: Modifier = Modifier,
 ) {
     val color = primaryRecipe?.color
-    val ingredientSummary = bowl.ingredients.joinToString(" · ") { it.name }
     MiseCard(
         modifier = modifier
             .fillMaxWidth()
@@ -68,28 +67,13 @@ fun MiseChecklistRow(
                     ),
                     color = MiseTokens.colors.ink,
                 )
-                if (ingredientSummary.isNotBlank()) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        ingredientSummary,
-                        style = MiseTokens.text.small,
-                        color = MiseTokens.colors.ink3,
-                        maxLines = 2,
-                    )
-                }
                 if (bowl.instruction.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    bowl.instruction.forEach { line ->
-                        Row(modifier = Modifier.padding(vertical = 2.dp)) {
-                            Text("·", style = MiseTokens.text.bodyEmphasis, color = MiseTokens.colors.ink3)
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                line,
-                                style = MiseTokens.text.small,
-                                color = MiseTokens.colors.ink2,
-                            )
-                        }
-                    }
+                    Spacer(Modifier.height(10.dp))
+                    InstructionStepBlock(
+                        steps = bowl.instruction,
+                        headerStyle = MiseTokens.text.body,
+                        ingredientStyle = MiseTokens.text.small,
+                    )
                 }
             }
         }
