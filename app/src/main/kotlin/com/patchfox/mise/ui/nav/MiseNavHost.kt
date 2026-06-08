@@ -10,6 +10,7 @@ import com.patchfox.mise.ui.component.PhaseTab
 import com.patchfox.mise.ui.screen.cook.CookScreen
 import com.patchfox.mise.ui.screen.home.HomeScreen
 import com.patchfox.mise.ui.screen.recipe.RecipeDetailScreen
+import com.patchfox.mise.ui.screen.recipe.RecipeInstructionsScreen
 import com.patchfox.mise.ui.screen.recipe.RecipesScreen
 import com.patchfox.mise.ui.screen.summary.SummaryScreen
 import com.patchfox.mise.ui.window.WindowSize
@@ -57,12 +58,25 @@ fun MiseNavHost(
         composable<RecipesRoute> {
             RecipesScreen(
                 windowSize = windowSize,
-                onOpenRecipe = { id -> navController.navigate(RecipeDetailRoute(id.value)) },
+                onOpenRecipe = { cookCardId, id ->
+                    navController.navigate(RecipeDetailRoute(id.value, cookCardId))
+                },
             )
         }
         composable<RecipeDetailRoute> { backStackEntry ->
             val route: RecipeDetailRoute = backStackEntry.toRoute()
             RecipeDetailScreen(
+                recipeId = route.recipeId,
+                windowSize = windowSize,
+                onBack = { navController.popBackStack() },
+                onOpenInstructions = { recipeId ->
+                    navController.navigate(RecipeInstructionsRoute(recipeId, route.cookCardId))
+                },
+            )
+        }
+        composable<RecipeInstructionsRoute> { backStackEntry ->
+            val route: RecipeInstructionsRoute = backStackEntry.toRoute()
+            RecipeInstructionsScreen(
                 recipeId = route.recipeId,
                 windowSize = windowSize,
                 onBack = { navController.popBackStack() },

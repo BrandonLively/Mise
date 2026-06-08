@@ -12,4 +12,10 @@ sealed interface CookCardLoadState {
 interface CookCardRepository {
     fun observe(): Flow<CookCardLoadState>
     suspend fun refresh()
+
+    /** Every cook card the signed-in user has, newest-first. Parsing failures are dropped. */
+    suspend fun getHistory(): List<CookCard>
+
+    /** A single cook card by its domain id, or null if absent / unparseable. */
+    suspend fun getById(id: String): CookCard?
 }

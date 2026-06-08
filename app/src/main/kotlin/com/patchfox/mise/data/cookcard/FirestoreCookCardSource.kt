@@ -79,6 +79,16 @@ class FirestoreCookCardSource @Inject constructor(
         firestore.collection(COLLECTION).get().await()
     }
 
+    override suspend fun fetchAll(): List<RawCookCard> {
+        val snap = firestore.collection(COLLECTION).get().await()
+        val cards = snap.documents.mapNotNull { doc ->
+            val payload = doc.toJsonPayload() ?: return@mapNotNull null
+            RawCookCard(id = doc.id, payload = payload, rankMillis = doc.latestTimestampMillis())
+        }
+        Log.d(TAG, "fetchAll: ${cards.size} cook card(s) from '$COLLECTION'")
+        return cards.sortedByDescending { it.rankMillis }
+    }
+
     /** Newest-touched time, used to rank documents. Checks the common field names. */
     private fun DocumentSnapshot.latestTimestampMillis(): Long {
         for (field in TIMESTAMP_FIELDS) {

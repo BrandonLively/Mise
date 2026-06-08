@@ -38,6 +38,7 @@ import com.patchfox.mise.ui.nav.HomeRoute
 import com.patchfox.mise.ui.nav.MiseDestination
 import com.patchfox.mise.ui.nav.MiseNavHost
 import com.patchfox.mise.ui.nav.RecipeDetailRoute
+import com.patchfox.mise.ui.nav.RecipeInstructionsRoute
 import com.patchfox.mise.ui.nav.RecipesRoute
 import com.patchfox.mise.ui.nav.SummaryRoute
 import com.patchfox.mise.ui.screen.login.LoginScreen
@@ -84,6 +85,7 @@ private fun SignedInApp(
             route.startsWith(SummaryRoute::class.qualifiedName ?: "") -> MiseDestination.Summary
             route.startsWith(RecipesRoute::class.qualifiedName ?: "") -> MiseDestination.Recipes
             route.startsWith(RecipeDetailRoute::class.qualifiedName ?: "") -> MiseDestination.Recipes
+            route.startsWith(RecipeInstructionsRoute::class.qualifiedName ?: "") -> MiseDestination.Recipes
             else -> MiseDestination.Home
         }
     } ?: MiseDestination.Home

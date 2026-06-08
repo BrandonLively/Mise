@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -51,6 +52,7 @@ fun RecipeDetailScreen(
     recipeId: String,
     windowSize: WindowSize,
     onBack: () -> Unit,
+    onOpenInstructions: (recipeId: String) -> Unit,
     viewModel: RecipeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -64,13 +66,17 @@ fun RecipeDetailScreen(
     val initial = card.recipes.firstOrNull { it.id.value == recipeId } ?: card.recipes.first()
 
     when (windowSize) {
-        WindowSize.Compact -> RecipeDetailPhone(initial, onBack)
-        else -> RecipeDetailTablet(card.recipes, initial, onBack)
+        WindowSize.Compact -> RecipeDetailPhone(initial, onBack, onOpenInstructions)
+        else -> RecipeDetailTablet(card.recipes, initial, onBack, onOpenInstructions)
     }
 }
 
 @Composable
-internal fun RecipeDetailPhone(recipe: Recipe, onBack: () -> Unit) {
+internal fun RecipeDetailPhone(
+    recipe: Recipe,
+    onBack: () -> Unit,
+    onOpenInstructions: (recipeId: String) -> Unit,
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -87,12 +93,17 @@ internal fun RecipeDetailPhone(recipe: Recipe, onBack: () -> Unit) {
                 Text("Back", style = MiseTokens.text.bodyEmphasis, color = MiseTokens.colors.ink2)
             }
         }
-        item { RecipeDetailContent(recipe) }
+        item { RecipeDetailContent(recipe, onOpenInstructions = { onOpenInstructions(recipe.id.value) }) }
     }
 }
 
 @Composable
-internal fun RecipeDetailTablet(recipes: List<Recipe>, initial: Recipe, onBack: () -> Unit) {
+internal fun RecipeDetailTablet(
+    recipes: List<Recipe>,
+    initial: Recipe,
+    onBack: () -> Unit,
+    onOpenInstructions: (recipeId: String) -> Unit,
+) {
     var selected by remember { mutableStateOf(initial) }
     Row(
         modifier = Modifier
@@ -147,13 +158,13 @@ internal fun RecipeDetailTablet(recipes: List<Recipe>, initial: Recipe, onBack: 
                 .padding(32.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            item { RecipeDetailContent(selected) }
+            item { RecipeDetailContent(selected, onOpenInstructions = { onOpenInstructions(selected.id.value) }) }
         }
     }
 }
 
 @Composable
-private fun RecipeDetailContent(recipe: Recipe) {
+private fun RecipeDetailContent(recipe: Recipe, onOpenInstructions: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -173,6 +184,23 @@ private fun RecipeDetailContent(recipe: Recipe) {
             Text(recipe.emoji, style = MiseTokens.text.display.copy(fontSize = MiseTokens.text.h1.fontSize))
         }
         Text(recipe.description, style = MiseTokens.text.body, color = MiseTokens.colors.ink2)
+
+        // Primary action — jump to the step-by-step instructions for this recipe.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MiseTokens.colors.accent)
+                .clickable { onOpenInstructions() }
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "Instructions",
+                style = MiseTokens.text.bodyEmphasis,
+                color = MiseTokens.colors.surface,
+            )
+        }
 
         // Macros band
         MiseCard(modifier = Modifier.fillMaxWidth()) {

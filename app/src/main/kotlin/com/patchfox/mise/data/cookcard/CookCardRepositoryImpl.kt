@@ -111,6 +111,18 @@ class CookCardRepositoryImpl @Inject constructor(
         firestoreSource.refreshOnce()
     }
 
+    override suspend fun getHistory(): List<CookCard> = withContext(Dispatchers.IO) {
+        if (auth.currentUser.value == null) return@withContext emptyList()
+        firestoreSource.fetchAll().mapNotNull { raw ->
+            runCatching { CookCardParser.parse(raw.payload).toDomain() }
+                .onFailure { Log.e(TAG, "Skipping unparseable history doc '${raw.id}'", it) }
+                .getOrNull()
+        }
+    }
+
+    override suspend fun getById(id: String): CookCard? =
+        getHistory().firstOrNull { it.id.value == id }
+
     private fun CookCardEntity.toCookCardOrNull(): CookCard? =
         runCatching { CookCardParser.parse(jsonPayload).toDomain() }
             .onFailure { Log.e(TAG, "Failed to map cached cook card to domain", it) }

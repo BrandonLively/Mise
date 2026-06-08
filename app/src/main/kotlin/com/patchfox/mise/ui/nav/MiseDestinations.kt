@@ -12,7 +12,17 @@ import kotlinx.serialization.Serializable
 ) : MiseRoute
 @Serializable data object SummaryRoute : MiseRoute
 @Serializable data object RecipesRoute : MiseRoute
-@Serializable data class RecipeDetailRoute(val recipeId: String) : MiseRoute
+
+/** [cookCardId] null = this week's current card; non-null = a specific past card. */
+@Serializable data class RecipeDetailRoute(
+    val recipeId: String,
+    val cookCardId: String? = null,
+) : MiseRoute
+
+@Serializable data class RecipeInstructionsRoute(
+    val recipeId: String,
+    val cookCardId: String? = null,
+) : MiseRoute
 
 /** Logical top-level destinations the bottom nav / rail switches between. */
 enum class MiseDestination(val label: String) {

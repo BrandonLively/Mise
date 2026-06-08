@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.patchfox.mise.domain.model.CookCard
 import com.patchfox.mise.domain.model.Recipe
 import com.patchfox.mise.domain.model.RecipeId
 import com.patchfox.mise.ui.component.MiseCard
@@ -34,7 +35,7 @@ import com.patchfox.mise.ui.window.WindowSize
 @Composable
 fun RecipesScreen(
     windowSize: WindowSize,
-    onOpenRecipe: (RecipeId) -> Unit,
+    onOpenRecipe: (cookCardId: String?, RecipeId) -> Unit,
     viewModel: RecipeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -45,13 +46,16 @@ fun RecipesScreen(
         }
         return
     }
-    RecipesContent(recipes = card.recipes, onOpenRecipe = onOpenRecipe)
+    // Everything other than the current card is "previous".
+    val previous = state.history.filter { it.id != card.id }
+    RecipesContent(current = card, previous = previous, onOpenRecipe = onOpenRecipe)
 }
 
 @Composable
 fun RecipesContent(
-    recipes: List<Recipe>,
-    onOpenRecipe: (RecipeId) -> Unit,
+    current: CookCard,
+    previous: List<CookCard>,
+    onOpenRecipe: (cookCardId: String?, RecipeId) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -65,8 +69,35 @@ fun RecipesContent(
             Spacer(Modifier.height(6.dp))
             Text("This week's cook card", style = MiseTokens.text.h2, color = MiseTokens.colors.ink)
         }
-        items(recipes) { recipe ->
-            RecipeListRow(recipe, onOpenRecipe)
+        items(current.recipes) { recipe ->
+            // Current card → null cookCardId so detail reads the live current card.
+            RecipeListRow(recipe) { id -> onOpenRecipe(null, id) }
+        }
+
+        if (previous.isNotEmpty()) {
+            item {
+                Spacer(Modifier.height(12.dp))
+                Text("PREVIOUS RECIPES", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
+            }
+            previous.forEach { pastCard ->
+                item {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        pastCard.theme,
+                        style = MiseTokens.text.h4,
+                        color = MiseTokens.colors.ink2,
+                    )
+                    Text(
+                        pastCard.cookDate.toString(),
+                        style = MiseTokens.text.micro,
+                        color = MiseTokens.colors.ink3,
+                    )
+                }
+                items(pastCard.recipes) { recipe ->
+                    val cardId = pastCard.id.value
+                    RecipeListRow(recipe) { id -> onOpenRecipe(cardId, id) }
+                }
+            }
         }
     }
 }

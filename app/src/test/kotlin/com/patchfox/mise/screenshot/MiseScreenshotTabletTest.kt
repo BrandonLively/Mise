@@ -71,7 +71,7 @@ class MiseScreenshotTabletTest {
 
     @Test
     fun recipes() = captureTabletScreen("tablet-recipes", MiseDestination.Recipes) {
-        RecipesContent(recipes = card.recipes, onOpenRecipe = {})
+        RecipesContent(current = card, previous = emptyList(), onOpenRecipe = { _, _ -> })
     }
 
     @Test
@@ -80,6 +80,7 @@ class MiseScreenshotTabletTest {
             recipes = card.recipes,
             initial = card.recipes.first(),
             onBack = {},
+            onOpenInstructions = {},
         )
     }
 }

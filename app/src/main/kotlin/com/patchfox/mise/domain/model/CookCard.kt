@@ -298,3 +298,12 @@ fun CookCard.phase0(): Phase.Phase0? =
 
 fun CookCard.recipeById(id: RecipeId): Recipe? =
     recipes.firstOrNull { it.id == id }
+
+/**
+ * The ordered active cooking steps for a single recipe, pulled from the Phase 2
+ * timeline. The cook plan interleaves every recipe into one schedule; this filters
+ * it back down to "how to make this one dish." Shared steps with no [CookStep.recipeId]
+ * are intentionally excluded.
+ */
+fun CookCard.instructionsForRecipe(id: RecipeId): List<CookStep> =
+    phase2()?.steps?.filter { it.recipeId == id }.orEmpty()
