@@ -1,47 +1,42 @@
 package com.patchfox.mise.data.dto
 
-import kotlinx.serialization.SerialName
+/*
+ * cook-card v3 wire DTOs — see handoffv2/cook-card.v3.schema.json.
+ * Top level is meta + recipes[]; each recipe is self-contained (misePhase + cookPhase).
+ * There is NO cookPlan, NO phase-0/1/2, NO top-level schedule/household/dailyActual —
+ * those v2 fields are gone, and that is exactly why a v3 card cannot parse against the
+ * old required-field DTOs. This is a hard cutover (no v2 back-compat).
+ *
+ * Parsed by CookCardParser (ignoreUnknownKeys / isLenient / coerceInputValues), so the
+ * schema's additionalProperties:true and any leftover keys are tolerated.
+ */
+
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable
-data class CookCardDto(
+data class CookCardV3Dto(
     val schemaVersion: String,
-    val meta: MetaDto,
-    val schedule: ScheduleDto,
-    val recipes: List<RecipeDto>,
-    val cookPlan: CookPlanDto,
-    val reheatReference: List<ReheatEntryDto> = emptyList(),
-    val containerMath: List<ContainerMathEntryDto> = emptyList(),
-    val macroReconciliation: JsonElement? = null,
-    val componentYields: List<ComponentYieldEntryDto> = emptyList(),
-    val substitutions: List<JsonElement> = emptyList(),
-    val leftovers: List<JsonElement> = emptyList(),
+    val meta: MetaV3Dto,
+    val recipes: List<RecipeV3Dto>,
+    // uploadedAt is a Firestore server-timestamp; not present in the on-disk JSON.
 )
 
 @Serializable
-data class MetaDto(
+data class MetaV3Dto(
     val id: String,
     val theme: String,
     val cookDate: String,
-    val firstMealDate: String? = null,
-    val pickupDate: String? = null,
-    val household: HouseholdDto,
     val servingsPerMain: Int,
     val servingsPerDessert: Int? = null,
-    val dailyTarget: DailyTargetDto,
-    val dailyActual: DailyActualDto,
+    val dailyTarget: DailyTargetV3Dto,
     val generation: JsonElement? = null,
 )
 
 @Serializable
-data class HouseholdDto(
-    val people: Int,
-    val daysCovered: Int,
-)
-
-@Serializable
-data class DailyTargetDto(
+data class DailyTargetV3Dto(
     val calories: Double,
     val proteinFloorGrams: Double,
     val leanPreference: String? = null,
@@ -49,278 +44,177 @@ data class DailyTargetDto(
 )
 
 @Serializable
-data class DailyActualDto(
-    val calories: Double,
-    val proteinGrams: Double,
-    val carbsGrams: Double,
-    val fatGrams: Double,
-    val withinTarget: Boolean? = null,
-    val deltaPercent: Double? = null,
-    val statusNote: String? = null,
-)
-
-@Serializable
-data class ScheduleDto(
-    val prep: List<ScheduleEntryDto> = emptyList(),
-    val cook: List<ScheduleEntryDto> = emptyList(),
-    val firstMeal: List<ScheduleEntryDto> = emptyList(),
-)
-
-@Serializable
-data class ScheduleEntryDto(
-    val date: String,
-    val dayOfWeek: String,
-    val label: String,
-    val tasks: List<String> = emptyList(),
-    val rationale: String? = null,
-)
-
-@Serializable
-data class RecipeDto(
+data class RecipeV3Dto(
     val id: String,
     val name: String,
-    val type: String,
+    val type: String,                         // "main" | "dessert"
     val emoji: String? = null,
-    val color: String,
-    val colorTag: String? = null,
-    val colorTagDescription: String? = null,
-    val description: String,
-    val source: SourceDto? = null,
-    val yield: YieldDto,
-    val perServing: MacroDto,
-    val timing: TimingDto? = null,
-    val ingredients: JsonElement,
-    val equipment: JsonElement,
-    val assembleAndStore: JsonElement? = null,
-    val reheat: ReheatSpecDto,
+    val color: String? = null,                // BLUE|GREEN|PURPLE|YELLOW|RED
+    val description: String? = null,
+    val source: SourceV3Dto? = null,
+    val yield: YieldV3Dto? = null,
+    val perServing: MacroV3Dto,               // DERIVED = Σ macroBreakdown rows
+    val timing: TimingV3Dto? = null,
+    val equipment: List<String> = emptyList(),
+    val assembleAndStore: List<String> = emptyList(),
+    val prepSchedule: List<PrepStepV3Dto> = emptyList(),
+    val misePhase: MisePhaseV3Dto? = null,
+    val cookPhase: CookPhaseV3Dto,
+    val macroBreakdown: MacroBreakdownV3Dto? = null,
+    val reheat: ReheatV3Dto? = null,
+    val deviationsFromPlan: List<String> = emptyList(),
 )
 
 @Serializable
-data class SourceDto(
-    val author: String? = null,
-    val url: String? = null,
-)
+data class SourceV3Dto(val author: String? = null, val url: String? = null)
 
 @Serializable
-data class YieldDto(
-    val servings: Int,
+data class YieldV3Dto(
+    val servings: Int? = null,
     val containerSize: String? = null,
     val perServingContainerNote: String? = null,
 )
 
 @Serializable
-data class MacroDto(
-    val calories: Double,
-    val proteinGrams: Double,
-    val carbsGrams: Double,
-    val fatGrams: Double,
+data class MacroV3Dto(
+    val calories: Double = 0.0,
+    val proteinGrams: Double = 0.0,
+    val carbsGrams: Double = 0.0,
+    val fatGrams: Double = 0.0,
 )
 
 @Serializable
-data class TimingDto(
+data class TimingV3Dto(
     val activeMinutes: Double? = null,
-    val totalMinutes: JsonElement? = null,
+    val totalMinutes: JsonElement? = null,    // number OR string
     val keeps: String? = null,
 )
 
 @Serializable
-data class IngredientDto(
-    val name: String,
-    val batchQuantity: String,
-    val batchGrams: Double? = null,
-    val batchVolumeMl: Double? = null,
-    val batchCount: Double? = null,
-    val inMise: String? = null,
-    val miseBowlId: String? = null,
-    val miseStandalone: Boolean? = null,
-    val substitutionNote: String? = null,
-)
-
-@Serializable
-data class ReheatSpecDto(
-    val method: String,
-    val timeSeconds: Double? = null,
-    val additionalTimeSeconds: Double? = null,
-    val additionalTimeNote: String? = null,
-    val extraSteps: List<String> = emptyList(),
-)
-
-@Serializable
-data class CookPlanDto(
-    val totalActiveMinutes: Double? = null,
-    val phaseDurationMinutes: Map<String, Double> = emptyMap(),
-    val emojiLegend: List<EmojiLegendEntryDto> = emptyList(),
-    val phases: List<JsonElement>,
-)
-
-@Serializable
-data class EmojiLegendEntryDto(
-    val recipeId: String,
-    val recipeName: String,
-    val emoji: String,
-)
-
-@Serializable
-data class Phase0Dto(
-    val id: String,
+data class PrepStepV3Dto(
+    val offset: String,                       // "night-before" | "T-36h" | ...
     val label: String,
-    val estimatedMinutes: Double? = null,
-    val purpose: String? = null,
-    val steps: List<Phase0StepDto> = emptyList(),
+    val tasks: List<String> = emptyList(),
+    val combinable: Boolean = true,
+    val rationale: String? = null,
+)
+
+// ---- Phases (named objects, NOT an array) ----
+
+@Serializable
+data class MisePhaseV3Dto(
+    val durationMinutes: Double? = null,
+    val description: String? = null,
+    val bowls: List<MiseBowlV3Dto> = emptyList(),
+    val standalones: List<MiseStandaloneV3Dto> = emptyList(),
 )
 
 @Serializable
-data class Phase0StepDto(
+data class CookPhaseV3Dto(
+    val durationMinutes: Double? = null,
+    val description: String? = null,
+    val steps: List<CookStepV3Dto> = emptyList(),   // the leading backgroundable steps are the old "Phase 0"
+)
+
+@Serializable
+data class MiseBowlV3Dto(
     val id: String,
-    val stepNumber: Int,
-    /**
-     * v2 schema: array of `InstructionStep` objects. Parsed flexibly in the
-     * mapper via [JsonElement] so unexpected shapes are skipped rather than
-     * crashing the whole card.
-     */
-    val task: JsonElement,
-    val description: String,
-    val recipeIds: List<String> = emptyList(),
-    val estimatedActiveMinutes: Double? = null,
-    val estimatedRuntime: String? = null,
-    val timer: TimerDto? = null,
-)
-
-@Serializable
-data class Phase1Dto(
-    val id: String,
-    val label: String,
-    val estimatedMinutes: Double? = null,
-    val purpose: String? = null,
-    val smellHierarchyNote: String? = null,
-    val bowls: List<MiseBowlDto> = emptyList(),
-    val standalone: List<MiseStandaloneDto> = emptyList(),
-)
-
-@Serializable
-data class MiseBowlDto(
-    val id: String,
-    val bowlNumber: Int,
     val name: String,
-    val forRecipeId: JsonElement,
-    val ingredients: List<BowlIngredientDto> = emptyList(),
-    /** v2 schema: array of `InstructionStep` objects. */
-    val instruction: JsonElement? = null,
-    val notes: List<String> = emptyList(),
+    val ingredients: List<IngredientV3Dto> = emptyList(),
+    val steps: List<String> = emptyList(),    // prose prep (renamed from v2 `instruction`)
 )
 
 @Serializable
-data class BowlIngredientDto(
+data class MiseStandaloneV3Dto(
     val name: String,
-    val qty: String,
-    val grams: Double? = null,
-    val ml: Double? = null,
-    val count: Double? = null,
+    val ingredientId: String? = null,
+    val prep: List<String> = emptyList(),
 )
 
 @Serializable
-data class MiseStandaloneDto(
-    val label: String,
-    /** v2 schema: array of `InstructionStep` objects. */
-    val prep: JsonElement? = null,
-)
-
-@Serializable
-data class InstructionStepDto(
-    val instructionPrefix: String,
-    val ingredients: List<InstructionIngredientDto>? = null,
-)
-
-@Serializable
-data class InstructionIngredientDto(
+data class IngredientV3Dto(
+    val ingredientId: String,                 // canonical slug — the merge key
     val name: String,
-    val quantity: String? = null,
+    val quantity: JsonElement? = null,        // number | string | null  → quantityAsDouble()/quantityAsDisplay()
     val unit: String? = null,
     val preparation: String? = null,
+    val combinable: Boolean = true,           // false = never pooled across recipes
 )
 
 @Serializable
-data class Phase2Dto(
+data class CookStepV3Dto(
     val id: String,
-    val label: String,
-    val estimatedMinutes: Double? = null,
-    val purpose: String? = null,
-    val stepCount: Int? = null,
-    val steps: List<Phase2StepDto> = emptyList(),
-)
-
-@Serializable
-data class Phase2StepDto(
-    val id: String,
-    val stepNumber: Int,
-    val clockTime: String,
-    val clockMinutes: Int,
-    val recipeId: String? = null,
-    val recipeName: String? = null,
-    val recipeEmoji: String? = null,
-    val task: JsonElement,
-    val miseReferences: List<MiseReferenceDto> = emptyList(),
-    val equipmentUsed: List<String> = emptyList(),
-    val handsOff: List<String> = emptyList(),
-    val timer: TimerDto? = null,
+    val backgroundable: Boolean = false,      // true = long-running hands-off; leads the cookPhase (the old Phase 0)
+    val label: String? = null,
+    val clockTime: String? = null,
+    val steps: List<String> = emptyList(),    // prose lines (renamed from v2 `task`; no InstructionStep wrapper)
+    val ingredients: List<IngredientV3Dto> = emptyList(),
+    val timer: TimerV3Dto? = null,
+    val handsOff: List<String> = emptyList(), // "Meanwhile" block
     val isFinalStep: Boolean = false,
 )
 
 @Serializable
-data class MiseReferenceDto(
-    val bowlId: String? = null,
-    val bowlNumber: Int? = null,
-    val volumeHint: String? = null,
-    val label: String? = null,
-    val isStandalone: Boolean? = null,
-)
-
-@Serializable
-data class TimerDto(
-    val label: String,
-    val durationSeconds: Int,
-    val maxDurationSeconds: Int? = null,
+data class TimerV3Dto(
+    val label: String? = null,                // v3 uses `label` (v2 doc called it `title`)
+    val durationSeconds: Double? = null,
+    val maxDurationSeconds: Double? = null,
     val durationDescription: String? = null,
 )
 
 @Serializable
-data class ReheatEntryDto(
-    val recipeId: String,
-    val recipeName: String,
+data class MacroBreakdownV3Dto(val ingredients: List<MacroIngredientV3Dto> = emptyList())
+
+@Serializable
+data class MacroIngredientV3Dto(
+    val name: String,
+    val ingredientId: String? = null,
+    val quantity: Double? = null,
+    val unit: String? = null,
+    val displayHint: String? = null,
+    val source: String? = null,
+    val calories: Double = 0.0,
+    val proteinGrams: Double = 0.0,
+    val carbsGrams: Double = 0.0,
+    val fatGrams: Double = 0.0,
+)
+
+@Serializable
+data class ReheatV3Dto(
     val method: String,
     val timeSeconds: Double? = null,
-    val additionalTimeSeconds: Double? = null,
-    val additionalTimeNote: String? = null,
     val extraSteps: List<String> = emptyList(),
 )
 
-@Serializable
-data class ContainerMathEntryDto(
-    val recipeId: String,
-    val containers: List<ContainerDto> = emptyList(),
-)
+/**
+ * Ingredient.quantity is number|string|null in the schema. Pull a Double when it is
+ * numeric (or a clean numeric string); null otherwise (e.g. "to taste", "1 can", "½ tsp").
+ */
+fun JsonElement?.quantityAsDouble(): Double? {
+    val p = this as? JsonPrimitive ?: return null
+    if (p is JsonNull) return null
+    return if (p.isString) p.content.trim().toDoubleOrNull() else p.content.toDoubleOrNull()
+}
 
-@Serializable
-data class ContainerDto(
-    val count: Int,
-    val size: String,
-    val purpose: String,
-)
+/**
+ * Human display form of a quantity: the raw string when authored as a string
+ * (e.g. "1 can", "½ tsp", "~250g"), a tidy number when authored numerically
+ * (2.0 -> "2", 0.5 -> "0.5"), or null when absent.
+ */
+fun JsonElement?.quantityAsDisplay(): String? {
+    val p = this as? JsonPrimitive ?: return null
+    if (p is JsonNull) return null
+    if (p.isString) return p.content.trim().ifBlank { null }
+    val d = p.content.toDoubleOrNull() ?: return p.content
+    return d.tidy()
+}
 
-@Serializable
-data class ComponentYieldEntryDto(
-    val recipeId: String,
-    val components: List<ComponentYieldDto> = emptyList(),
-    val perRecipeTotal: JsonElement? = null,
-    val perRecipeTotalNote: String? = null,
-)
+/** Display form of a numeric JsonElement (number or numeric string), e.g. for timing.totalMinutes. */
+fun JsonElement?.numericAsDisplay(): String? {
+    val p = this as? JsonPrimitive ?: return null
+    if (p is JsonNull) return null
+    return if (p.isString) p.content.trim().ifBlank { null } else p.content
+}
 
-@Serializable
-data class ComponentYieldDto(
-    val label: String,
-    val yieldDescription: String? = null,
-    val yieldGrams: Double,
-    val totalCalories: Double,
-    val perServingCalories: Double,
-    val addedFreshPerServing: Boolean? = null,
-)
+internal fun Double.tidy(): String =
+    if (this == toLong().toDouble()) toLong().toString() else toString()

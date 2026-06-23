@@ -1,11 +1,12 @@
 package com.patchfox.mise.screenshot
 
 import android.app.Application
+import com.patchfox.mise.domain.usecase.BuildCookGuidesUseCase
+import com.patchfox.mise.domain.usecase.BuildMiseGuidesUseCase
 import com.patchfox.mise.domain.usecase.ParsePrepTasksUseCase
-import com.patchfox.mise.ui.component.PhaseTab
 import com.patchfox.mise.ui.nav.MiseDestination
-import com.patchfox.mise.ui.screen.cook.CookActions
-import com.patchfox.mise.ui.screen.cook.CookTablet
+import com.patchfox.mise.ui.screen.cook.CookContent
+import com.patchfox.mise.ui.screen.cook.CookLaneCallbacks
 import com.patchfox.mise.ui.screen.cook.CookUiState
 import com.patchfox.mise.ui.screen.home.HomeTablet
 import com.patchfox.mise.ui.screen.home.HomeUiState
@@ -13,8 +14,7 @@ import com.patchfox.mise.ui.screen.login.LoginContent
 import com.patchfox.mise.ui.screen.login.LoginUiState
 import com.patchfox.mise.ui.screen.recipe.RecipeDetailTablet
 import com.patchfox.mise.ui.screen.recipe.RecipesContent
-import com.patchfox.mise.ui.screen.summary.SummaryTablet
-import com.patchfox.mise.ui.screen.summary.SummaryUiState
+import com.patchfox.mise.ui.state.CookStage
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -47,25 +47,50 @@ class MiseScreenshotTabletTest {
             ),
             onTogglePrep = { _, _ -> },
             onWalkPlan = {},
-            onOpenPhase = {},
+            onOpenStage = {},
             onOpenRecipe = {},
         )
     }
 
     @Test
     fun cook() = captureTabletScreen("tablet-cook", MiseDestination.Cook) {
-        CookTablet(
-            state = CookUiState(loading = false, card = card, selectedPhase = PhaseTab.Phase2),
-            actions = CookActions.NONE,
+        val miseGuides = BuildMiseGuidesUseCase()(card.recipes)
+        val (cookGuides, sharedCookSteps) = BuildCookGuidesUseCase()(card.recipes)
+        CookContent(
+            state = CookUiState(
+                loading = false,
+                card = card,
+                stage = CookStage.COOK,
+                miseGuides = miseGuides,
+                cookGuides = cookGuides,
+                sharedCookSteps = sharedCookSteps,
+            ),
+            onSetStage = {},
+            onToggleLane = {},
+            onReopenRecipe = {},
+            onDismissTimer = {},
+            laneCallbacks = CookLaneCallbacks.NONE,
         )
     }
 
     @Test
-    fun summary() = captureTabletScreen("tablet-summary", MiseDestination.Summary) {
-        SummaryTablet(
-            state = SummaryUiState(card = card, days = 7, loading = false),
-            onSetDays = {},
-            onSetWeight = { _, _, _ -> },
+    fun mise() = captureTabletScreen("tablet-mise", MiseDestination.Cook) {
+        val miseGuides = BuildMiseGuidesUseCase()(card.recipes)
+        val (cookGuides, sharedCookSteps) = BuildCookGuidesUseCase()(card.recipes)
+        CookContent(
+            state = CookUiState(
+                loading = false,
+                card = card,
+                stage = CookStage.MISE,
+                miseGuides = miseGuides,
+                cookGuides = cookGuides,
+                sharedCookSteps = sharedCookSteps,
+            ),
+            onSetStage = {},
+            onToggleLane = {},
+            onReopenRecipe = {},
+            onDismissTimer = {},
+            laneCallbacks = CookLaneCallbacks.NONE,
         )
     }
 

@@ -53,6 +53,28 @@ data class DaysDivisorEntity(
     val days: Int,
 )
 
+@Entity(tableName = "lane_visibility", primaryKeys = ["cookCardId", "stage", "laneId"])
+data class LaneVisibilityEntity(
+    val cookCardId: String,
+    val stage: String,
+    val laneId: String,
+    val updatedAtEpochMs: Long,
+)
+
+@Entity(tableName = "cook_step_index", primaryKeys = ["cookCardId", "laneKey"])
+data class CookStepIndexEntity(
+    val cookCardId: String,
+    val laneKey: String,
+    val stepIndex: Int,
+)
+
+@Entity(tableName = "completed_recipe", primaryKeys = ["cookCardId", "recipeId"])
+data class CompletedRecipeEntity(
+    val cookCardId: String,
+    val recipeId: String,
+    val completedAtEpochMs: Long,
+)
+
 @Entity(tableName = "pending_alarm")
 data class PendingAlarmEntity(
     @PrimaryKey val timerId: String,

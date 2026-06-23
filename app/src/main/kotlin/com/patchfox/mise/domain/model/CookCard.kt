@@ -18,25 +18,22 @@ value class PrepTaskId(val value: String)
 @JvmInline
 value class CookCardId(val value: String)
 
+/**
+ * cook-card v3 domain model. The card is just [meta-ish fields] + a list of
+ * fully self-contained [Recipe]s. There is no top-level cookPlan, schedule,
+ * household, or dailyActual: daily totals are DERIVED by the consumer
+ * (Σ recipes' [Recipe.perServing]); the shared COOK lane is DERIVED app-side
+ * (see BuildCookGuidesUseCase). Mise is strictly per-recipe (no shared lane).
+ */
 data class CookCard(
     val id: CookCardId,
     val theme: String,
     val cookDate: LocalDate,
-    val firstMealDate: LocalDate?,
-    val pickupDate: LocalDate?,
-    val household: Household,
     val servingsPerMain: Int,
     val servingsPerDessert: Int?,
     val dailyTarget: DailyTarget,
-    val dailyActual: DailyActual,
-    val schedule: Schedule,
     val recipes: List<Recipe>,
-    val cookPlan: CookPlan,
-    val reheatReference: List<ReheatEntry>,
-    val componentYields: List<ComponentYieldGroup>,
 )
-
-data class Household(val people: Int, val daysCovered: Int)
 
 data class DailyTarget(
     val calories: Double,
@@ -45,34 +42,9 @@ data class DailyTarget(
     val tolerancePercent: Double?,
 )
 
-data class DailyActual(
-    val calories: Double,
-    val proteinGrams: Double,
-    val carbsGrams: Double,
-    val fatGrams: Double,
-    val withinTarget: Boolean?,
-    val deltaPercent: Double?,
-    val statusNote: String?,
-)
-
-data class Schedule(
-    val prep: List<ScheduleEntry>,
-    val cook: List<ScheduleEntry>,
-    val firstMeal: List<ScheduleEntry>,
-)
-
-data class ScheduleEntry(
-    val date: LocalDate,
-    val dayOfWeek: DayOfWeek,
-    val label: String,
-    val tasks: List<String>,
-    val rationale: String?,
-)
-
-enum class DayOfWeek { SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY }
-
 enum class RecipeType { MAIN, DESSERT, SIDE, SNACK, BREAKFAST, OTHER }
 
+/** Callout styling tag — kept for in-app recipe-note callouts (no longer authored on the card). */
 enum class ColorTag { NOTE, TIP, IMPORTANT, WARNING, CAUTION }
 
 data class Recipe(
@@ -81,23 +53,25 @@ data class Recipe(
     val type: RecipeType,
     val emoji: String,
     val color: RecipeColor,
-    val colorTag: ColorTag?,
-    val colorTagDescription: String?,
     val description: String,
     val source: RecipeSource?,
     val yield: RecipeYield,
     val perServing: Macro,
     val timing: RecipeTiming?,
-    val ingredients: List<Ingredient>,
     val equipment: List<String>,
     val assembleAndStore: List<String>,
-    val reheat: ReheatSpec,
+    val prepSchedule: List<PrepStep>,
+    val misePhase: MisePhase,
+    val cookPhase: CookPhase,
+    val macroBreakdown: List<MacroIngredient>,
+    val reheat: ReheatSpec?,
+    val deviationsFromPlan: List<String>,
 )
 
 data class RecipeSource(val author: String?, val url: String?)
 
 data class RecipeYield(
-    val servings: Int,
+    val servings: Int?,
     val containerSize: String?,
     val perServingContainerNote: String?,
 )
@@ -115,154 +89,74 @@ data class RecipeTiming(
     val keeps: String?,
 )
 
-data class Ingredient(
-    val name: String,
-    val batchQuantity: String,
-    val batchGrams: Double?,
-    val batchVolumeMl: Double?,
-    val batchCount: Double?,
-    val inMise: String?,
-    val miseBowlId: BowlId?,
-    val miseStandalone: Boolean,
-    val substitutionNote: String?,
+/**
+ * Per-recipe prep in RELATIVE time ([offset], e.g. "night-before", "T-36h").
+ * The client may merge identical [combinable] prep across a multi-recipe selection.
+ */
+data class PrepStep(
+    val offset: String,
+    val label: String,
+    val tasks: List<String>,
+    val combinable: Boolean,
+    val rationale: String?,
 )
 
-data class ReheatSpec(
-    val method: String,
-    val timeSeconds: Int?,
-    val additionalTimeSeconds: Int?,
-    val additionalTimeNote: String?,
-    val extraSteps: List<String>,
+data class MisePhase(
+    val durationMinutes: Double?,
+    val description: String?,
+    val bowls: List<MiseBowl>,
+    val standalones: List<MiseStandalone>,
 )
 
-data class ReheatEntry(
-    val recipeId: RecipeId,
-    val recipeName: String,
-    val method: String,
-    val timeSeconds: Int?,
-    val additionalTimeSeconds: Int?,
-    val additionalTimeNote: String?,
-    val extraSteps: List<String>,
-)
-
-data class CookPlan(
-    val totalActiveMinutes: Int,
-    val phaseDurationMinutes: Map<String, Int>,
-    val emojiLegend: List<EmojiLegendEntry>,
-    val phases: List<Phase>,
-)
-
-data class EmojiLegendEntry(
-    val recipeId: RecipeId,
-    val recipeName: String,
-    val emoji: String,
-)
-
-sealed class Phase {
-    abstract val id: String
-    abstract val label: String
-    abstract val estimatedMinutes: Int
-    abstract val purpose: String?
-
-    data class Phase0(
-        override val id: String,
-        override val label: String,
-        override val estimatedMinutes: Int,
-        override val purpose: String?,
-        val steps: List<Phase0Step>,
-    ) : Phase()
-
-    data class Phase1(
-        override val id: String,
-        override val label: String,
-        override val estimatedMinutes: Int,
-        override val purpose: String?,
-        val smellHierarchyNote: String?,
-        val bowls: List<MiseBowl>,
-        val standalone: List<MiseStandalone>,
-    ) : Phase()
-
-    data class Phase2(
-        override val id: String,
-        override val label: String,
-        override val estimatedMinutes: Int,
-        override val purpose: String?,
-        val steps: List<CookStep>,
-    ) : Phase()
-}
-
-data class Phase0Step(
-    val id: StepId,
-    val stepNumber: Int,
-    val task: List<InstructionStep>,
-    val description: String,
-    val recipeIds: List<RecipeId>,
-    val estimatedActiveMinutes: Int?,
-    val estimatedRuntime: String?,
-    val timer: StepTimer?,
+data class CookPhase(
+    val durationMinutes: Double?,
+    val description: String?,
+    val steps: List<CookStep>,
 )
 
 data class MiseBowl(
     val id: BowlId,
-    val bowlNumber: Int,
     val name: String,
-    val forRecipeIds: List<RecipeId>,
-    val ingredients: List<BowlIngredient>,
-    val instruction: List<InstructionStep>,
-    val notes: List<String>,
-)
-
-data class BowlIngredient(
-    val name: String,
-    val qty: String,
-    val grams: Double?,
-    val ml: Double?,
-    val count: Double?,
-)
-
-data class MiseStandalone(val label: String, val prep: List<InstructionStep>)
-
-data class CookStep(
-    val id: StepId,
-    val stepNumber: Int,
-    val clockTime: String,
-    val clockMinutes: Int,
-    val recipeId: RecipeId?,
-    val recipeName: String?,
-    val recipeEmoji: String?,
-    val recipeColor: RecipeColor?,
-    val task: List<InstructionStep>,
-    val miseReferences: List<MiseReference>,
-    val equipmentUsed: List<String>,
-    val handsOff: List<String>,
-    val isFinalStep: Boolean,
-    val timer: StepTimer?,
+    val ingredients: List<Ingredient>,
+    val steps: List<String>,
+    /** Populated only on app-derived SHARED bowls — which recipes contributed. */
+    val sharedRecipeIds: List<RecipeId> = emptyList(),
 )
 
 /**
- * One bullet inside a multi-step instruction: an action prefix plus the
- * ingredients introduced at that step. [ingredients] is null when the step
- * is action-only (e.g. "Whisk well until smooth") and references items
- * already prepped in a prior step.
+ * The one ingredient shape, used by both mise bowls and cook steps.
+ * [quantity] is the parsed numeric amount (for cross-recipe merge summing) or null
+ * when the authored value isn't cleanly numeric; [quantityDisplay] is always the
+ * human form ("1 can", "½ tsp", "~250g", "2").
  */
-data class InstructionStep(
-    val prefix: String,
-    val ingredients: List<InstructionIngredient>?,
-)
-
-data class InstructionIngredient(
+data class Ingredient(
+    val ingredientId: String,
     val name: String,
-    val quantity: String?,
+    val quantity: Double?,
+    val quantityDisplay: String?,
     val unit: String?,
     val preparation: String?,
+    val combinable: Boolean = true,
+    /** Populated only on merged shared lines — which recipes this line covers (for emojis). */
+    val recipeIds: List<RecipeId> = emptyList(),
 )
 
-data class MiseReference(
-    val bowlId: BowlId?,
-    val bowlNumber: Int?,
-    val volumeHint: String?,
+data class MiseStandalone(
+    val name: String,
+    val ingredientId: String?,
+    val prep: List<String>,
+)
+
+data class CookStep(
+    val id: StepId,
+    val backgroundable: Boolean,
     val label: String?,
-    val isStandalone: Boolean,
+    val clockTime: String?,
+    val steps: List<String>,
+    val ingredients: List<Ingredient>,
+    val handsOff: List<String>,
+    val isFinalStep: Boolean,
+    val timer: StepTimer?,
 )
 
 data class StepTimer(
@@ -272,38 +166,39 @@ data class StepTimer(
     val durationDescription: String?,
 )
 
-data class ComponentYieldGroup(
-    val recipeId: RecipeId,
-    val components: List<ComponentYield>,
+data class MacroIngredient(
+    val name: String,
+    val ingredientId: String?,
+    val quantity: Double?,
+    val unit: String?,
+    val displayHint: String?,
+    val source: String?,
+    val macro: Macro,
 )
 
-data class ComponentYield(
-    val label: String,
-    val yieldDescription: String?,
-    val yieldGrams: Double,
-    val totalCalories: Double,
-    val perServingCalories: Double,
-    val addedFreshPerServing: Boolean,
+data class ReheatSpec(
+    val method: String,
+    val timeSeconds: Int?,
+    val extraSteps: List<String>,
 )
 
-/** Convenience accessor for the cook screen. */
-fun CookCard.phase2(): Phase.Phase2? =
-    cookPlan.phases.filterIsInstance<Phase.Phase2>().firstOrNull()
+// ---------------------------------------------------------------------------
+// Convenience accessors / derivations
+// ---------------------------------------------------------------------------
 
-fun CookCard.phase1(): Phase.Phase1? =
-    cookPlan.phases.filterIsInstance<Phase.Phase1>().firstOrNull()
+fun CookCard.recipeById(id: RecipeId): Recipe? = recipes.firstOrNull { it.id == id }
 
-fun CookCard.phase0(): Phase.Phase0? =
-    cookPlan.phases.filterIsInstance<Phase.Phase0>().firstOrNull()
+/** Daily macro total = Σ each recipe's per-serving row (v3 derives this consumer-side). */
+fun CookCard.dailyTotal(): Macro = recipes.fold(Macro(0.0, 0.0, 0.0, 0.0)) { acc, r ->
+    Macro(
+        calories = acc.calories + r.perServing.calories,
+        proteinGrams = acc.proteinGrams + r.perServing.proteinGrams,
+        carbsGrams = acc.carbsGrams + r.perServing.carbsGrams,
+        fatGrams = acc.fatGrams + r.perServing.fatGrams,
+    )
+}
 
-fun CookCard.recipeById(id: RecipeId): Recipe? =
-    recipes.firstOrNull { it.id == id }
-
-/**
- * The ordered active cooking steps for a single recipe, pulled from the Phase 2
- * timeline. The cook plan interleaves every recipe into one schedule; this filters
- * it back down to "how to make this one dish." Shared steps with no [CookStep.recipeId]
- * are intentionally excluded.
- */
-fun CookCard.instructionsForRecipe(id: RecipeId): List<CookStep> =
-    phase2()?.steps?.filter { it.recipeId == id }.orEmpty()
+/** Active minutes for the card = Σ recipes' mise + cook phase durations (rounded). */
+fun CookCard.totalActiveMinutes(): Int = recipes.sumOf { r ->
+    ((r.misePhase.durationMinutes ?: 0.0) + (r.cookPhase.durationMinutes ?: 0.0))
+}.toInt()

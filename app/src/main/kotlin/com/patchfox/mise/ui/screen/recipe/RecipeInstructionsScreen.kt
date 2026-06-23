@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -34,11 +33,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.patchfox.mise.domain.model.CookStep
 import com.patchfox.mise.domain.model.Recipe
 import com.patchfox.mise.domain.model.RecipeId
-import com.patchfox.mise.domain.model.instructionsForRecipe
+import com.patchfox.mise.domain.model.recipeById
 import com.patchfox.mise.ui.component.InstructionStepBlock
 import com.patchfox.mise.ui.component.MiseCard
 import com.patchfox.mise.ui.component.RecipeColorBand
+import com.patchfox.mise.ui.component.formatIngredient
 import com.patchfox.mise.ui.theme.MiseTokens
+import com.patchfox.mise.ui.theme.RecipeColor
 import com.patchfox.mise.ui.window.WindowSize
 
 @Composable
@@ -56,8 +57,8 @@ fun RecipeInstructionsScreen(
         }
         return
     }
-    val recipe = card.recipes.firstOrNull { it.id.value == recipeId }
-    val steps = card.instructionsForRecipe(RecipeId(recipeId))
+    val recipe = card.recipeById(RecipeId(recipeId)) ?: card.recipes.firstOrNull { it.id.value == recipeId }
+    val steps = recipe?.cookPhase?.steps.orEmpty()
     RecipeInstructionsContent(recipe = recipe, steps = steps, onBack = onBack)
 }
 
@@ -113,33 +114,58 @@ private fun RecipeInstructionsContent(
             }
         } else {
             itemsIndexed(steps) { index, step ->
-                InstructionStepCard(step = step, position = index + 1, total = steps.size)
+                InstructionStepCard(
+                    step = step,
+                    position = index + 1,
+                    total = steps.size,
+                    recipeColor = recipe?.color,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun InstructionStepCard(step: CookStep, position: Int, total: Int) {
+private fun InstructionStepCard(
+    step: CookStep,
+    position: Int,
+    total: Int,
+    recipeColor: RecipeColor?,
+) {
     MiseCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            RecipeColorBand(color = step.recipeColor, thickness = 3.dp)
+            RecipeColorBand(color = recipeColor, thickness = 3.dp)
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("STEP $position / $total", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
                     Spacer(Modifier.weight(1f))
-                    if (step.clockTime.isNotBlank()) {
-                        Text(step.clockTime, style = MiseTokens.text.clock, color = MiseTokens.colors.ink3)
+                    val clockTime = step.clockTime
+                    if (!clockTime.isNullOrBlank()) {
+                        Text(clockTime, style = MiseTokens.text.clock, color = MiseTokens.colors.ink3)
                     }
                 }
                 Spacer(Modifier.height(10.dp))
 
                 InstructionStepBlock(
-                    steps = step.task,
-                    headerStyle = MiseTokens.text.h4,
-                    ingredientStyle = MiseTokens.text.small,
+                    lines = step.steps,
+                    style = MiseTokens.text.bodyEmphasis,
                     stepSpacing = 12,
                 )
+
+                if (step.ingredients.isNotEmpty()) {
+                    Spacer(Modifier.height(10.dp))
+                    step.ingredients.forEach { ing ->
+                        Row {
+                            Text("·", style = MiseTokens.text.small, color = MiseTokens.colors.ink3)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                formatIngredient(ing),
+                                style = MiseTokens.text.small,
+                                color = MiseTokens.colors.ink2,
+                            )
+                        }
+                    }
+                }
 
                 step.timer?.let { timer ->
                     Spacer(Modifier.height(12.dp))
@@ -154,26 +180,6 @@ private fun InstructionStepCard(step: CookStep, position: Int, total: Int) {
                             append(formatDuration(timer.durationSeconds))
                         }
                         Text(label, style = MiseTokens.text.small, color = MiseTokens.colors.accent)
-                    }
-                }
-
-                if (step.equipmentUsed.isNotEmpty()) {
-                    Spacer(Modifier.height(12.dp))
-                    Text("EQUIPMENT", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
-                    Spacer(Modifier.height(6.dp))
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        step.equipmentUsed.forEach { eq ->
-                            Box(
-                                modifier = Modifier
-                                    .background(MiseTokens.colors.surface2, RoundedCornerShape(999.dp))
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                            ) {
-                                Text(eq, style = MiseTokens.text.small, color = MiseTokens.colors.ink2)
-                            }
-                        }
                     }
                 }
             }

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>mise — Cook Screen Redesign · Android Handoff</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  :root{--bg:#f3ece1;--surface:#faf5ec;--surface-2:#ede4d3;--ink:#2a1f17;--ink-2:#5a4838;--ink-3:#8b7a68;--line:rgba(42,31,23,0.10);--line-strong:rgba(42,31,23,0.18);--accent:#b8533a;--accent-soft:#e3a685;--accent-wash:#f5e3d6;--c-blue:#4d6e8c;--c-green:#6b8e5a;--c-purple:#8a6da3;--c-yellow:#c69a2e;--c-red:#b8533a;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Geist',system-ui,sans-serif;line-height:1.55;}
+  .doc{max-width:920px;margin:0 auto;padding:56px 36px 120px;}
+  h1,h2,h3,h4{font-family:'Instrument Serif',Georgia,serif;font-weight:400;letter-spacing:-0.01em;}
+  h1{font-size:58px;line-height:0.98;margin:0 0 14px;letter-spacing:-0.025em;}
+  h2{font-size:33px;margin:54px 0 16px;padding-top:26px;border-top:1px solid var(--line);}
+  h2:first-of-type{border-top:none;padding-top:0;margin-top:32px;}
+  h3{font-size:22px;margin:30px 0 12px;}
+  h4{font-size:17px;font-family:'Geist';font-weight:600;margin:20px 0 8px;}
+  p{margin:0 0 14px;font-size:15px;}
+  strong{font-weight:600;} em{color:var(--accent);font-style:italic;}
+  .lede{font-size:18px;line-height:1.5;color:var(--ink-2);margin-bottom:30px;max-width:720px;}
+  .micro{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);}
+  ul,ol{margin:0 0 14px;padding-left:22px;font-size:15px;} li{margin-bottom:6px;}
+  code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--surface-2);padding:1.5px 5px;border-radius:4px;}
+  pre{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.55;}
+  pre code{background:transparent;padding:0;}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-3);}
+  figure{margin:22px 0;}
+  figure img{width:100%;border-radius:12px;border:1px solid var(--line);display:block;}
+  figcaption{font-size:12px;color:var(--ink-3);margin-top:8px;font-family:'JetBrains Mono',monospace;}
+  .callout{border-left:3px solid var(--accent);background:var(--accent-wash);padding:14px 18px;border-radius:0 12px 12px 0;margin:18px 0;font-size:14px;}
+  .callout-label{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:4px;}
+  .callout-blue{border-left-color:var(--c-blue);background:color-mix(in oklab,var(--c-blue) 10%,var(--surface));}
+  .callout-blue .callout-label{color:var(--c-blue);}
+  .callout-green{border-left-color:var(--c-green);background:color-mix(in oklab,var(--c-green) 10%,var(--surface));}
+  .callout-green .callout-label{color:var(--c-green);}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 24px;margin-bottom:34px;}
+  .toc h4{margin-top:0;} .toc ol{columns:2;column-gap:24px;font-size:14px;}
+  .toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent;} .toc a:hover{border-color:var(--ink-3);}
+  .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;padding:3px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);margin:0 4px 4px 0;}
+  .new{background:color-mix(in oklab,var(--c-blue) 16%,var(--surface));color:var(--c-blue);}
+  .change{background:var(--accent-wash);color:var(--accent);}
+  .keep{background:color-mix(in oklab,var(--c-green) 16%,var(--surface));color:var(--c-green);}
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="micro">Android handoff · cook screen v2 · Compose</div>
+  <h1>Rebuild the Cook tab as <em>per-recipe lanes</em>.</h1>
+  <p class="lede">A focused implementation brief for the Cook-tab redesign, expressed as a diff against the app you already shipped. Everything else — Login, Home/Schedule, Summary, Recipe drill-down, theme, Nav3, Hilt, Firebase auth + sync — stays as-is. Read <strong>Cook Redesign — Design Delta.html</strong> first for the what-and-why; this is the how.</p>
+
+  <div class="callout">
+    <div class="callout-label">Baseline</div>
+    The original build follows <code>handoff/Claude Code prompt.html</code>: Kotlin, Jetpack Compose, Material 3, Navigation 3, Hilt, Firebase. <code>minSdk 36</code>. Reuse all of it. This brief only adds/replaces composables under <code>ui/screen/cook/</code> and a couple of domain helpers.
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-label">Data shape · cook-card v3 (updated 2026-06)</div>
+    The card is now <strong>cook-card.v3</strong>: each recipe is <strong>self-contained</strong> — its own <code>misePhase</code> (bowls + standalones) and <code>cookPhase</code> (steps). There is no shared <code>cookPlan</code>, no Phase 0/1/2, and <strong>no server-authored "shared" data</strong> (<code>sharedWith</code> / array <code>forRecipeId</code> are gone, by design). The <strong>Shared lanes are generated entirely app-side</strong> from whatever recipes are in the current plan — which is exactly what lets the user assemble <strong>custom local cook plans</strong> (mixing recipes from any week). Renames vs v2: cook step <code>task</code> → <code>steps: List&lt;String&gt;</code>; bowl <code>instruction</code> → <code>steps: List&lt;String&gt;</code>; bowls/steps carry canonical <code>ingredients[].ingredientId</code>; long-running kickoffs are flagged <code>cookStep.backgroundable=true</code> (the old Phase 0). Full shape: the cook-card-toolchain <em>consumer contract</em>.
+  </div>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#scope">Scope of this change</a></li>
+      <li><a href="#screens">Target screens (screenshots)</a></li>
+      <li><a href="#domain">Domain additions</a></li>
+      <li><a href="#state">ViewModel &amp; state</a></li>
+      <li><a href="#composables">Composable tree</a></li>
+      <li><a href="#command">CommandBar spec</a></li>
+      <li><a href="#lane">Lane specs</a></li>
+      <li><a href="#scroll">Horizontal snap-scroll</a></li>
+      <li><a href="#timers">Timers</a></li>
+      <li><a href="#persistence">Persistence</a></li>
+      <li><a href="#nav">Navigation &amp; Schedule change</a></li>
+      <li><a href="#tests">Tests</a></li>
+      <li><a href="#acceptance">Acceptance criteria</a></li>
+    </ol>
+  </div>
+
+  <h2 id="scope">Scope of this change</h2>
+  <ul>
+    <li><span class="tag change">replace</span> the entire Cook-tab UI and its ViewModel.</li>
+    <li><span class="tag new">add</span> domain helpers to <strong>derive</strong> the Shared lanes (mise + cook) app-side from the v3 per-recipe data — recipes already arrive grouped per recipe.</li>
+    <li><span class="tag change">change</span> Phase 0 (long-running kickoff tasks) is folded into the <strong>Cook</strong> stage — not a separate phase, not on the Schedule tab.</li>
+    <li><span class="tag keep">keep</span> theme, tokens, typography, Nav3 graph, Hilt modules, Firebase, and every other screen.</li>
+  </ul>
+
+  <h2 id="screens">Target screens</h2>
+  <figure>
+    <img src="screenshots-v2/01-cook-lanes.png" alt="Cook phase" />
+    <figcaption>screenshots-v2/01-cook-lanes.png · Cook phase. Title + Mise/Cook toggle · command bar (recipe chips + timers) · three lanes (Shared, Chicken, Shrimp) with header / step card / footer · Black Bean chip is "done" (dimmed, green check) and its lane is cleared.</figcaption>
+  </figure>
+  <figure>
+    <img src="screenshots-v2/02-mise-lanes.png" alt="Mise phase" />
+    <figcaption>screenshots-v2/02-mise-lanes.png · Mise phase. Same chrome; lanes are vertical bowl checklists. Shared mise lane (🥣) holds Bowl 7 (feeds 3 recipes). Checking a bowl collapses it to number + name.</figcaption>
+  </figure>
+
+  <h2 id="domain">Domain additions</h2>
+  <p>Pure-Kotlin helpers in <code>domain/usecase/</code> (unit-testable, no Android):</p>
+  <pre><code>data class RecipeCookGuide(val recipe: Recipe, val steps: List&lt;CookStep&gt;)
+data class SharedStep(
+    val id: String,
+    val title: String,
+    val emoji: String,
+    val recipeIds: List&lt;RecipeId&gt;,
+    val task: List&lt;String&gt;,            // bulleted lines
+    val runtime: String?,               // e.g. "~40 min unattended"
+)
+
+// COOK (v3): recipe.cookPhase.steps are ALREADY per-recipe — no grouping needed.
+// The shared cook track is DERIVED app-side: across the selected recipes, group
+// backgroundable steps (cookStep.backgroundable) that share an ingredientId AND
+// the same preparation (so "cook rice" hoists, but coconut rice & plain rice do not).
+class BuildCookGuidesUseCase {
+    // input is the SELECTED recipes (the current plan), not a single card's shared plan
+    operator fun invoke(recipes: List&lt;Recipe&gt;): Pair&lt;List&lt;RecipeCookGuide&gt;, List&lt;SharedStep&gt;&gt;
+}
+
+// MISE (v3): recipe.misePhase.bowls are ALREADY per-recipe. The shared mise track is
+// DERIVED by merging bowl ingredients across recipes by (ingredientId, unit, preparation);
+// combinable=false items never pool. Same merge whether the recipes come from one week
+// or a custom cross-week plan.
+data class RecipeMiseGuide(val recipe: Recipe, val bowls: List&lt;MiseBowl&gt;)
+class BuildMiseGuidesUseCase {
+    operator fun invoke(recipes: List&lt;Recipe&gt;): Pair&lt;List&lt;RecipeMiseGuide&gt;, List&lt;MiseBowl&gt;&gt; // perRecipe, shared
+}</code></pre>
+  <div class="callout callout-green">
+    <div class="callout-label">Shared lanes are app-generated (v3)</div>
+    <strong>Do not</strong> add a server-side <code>sharedWith</code> on steps or rely on an array <code>forRecipeId</code> on bowls — v3 has neither, by design. Shared work is <strong>computed locally</strong> from the self-contained recipes in the current plan: mise by the <code>(ingredientId, unit, preparation)</code> merge, cook by grouping <code>backgroundable</code> steps with a matching <code>ingredientId</code>+<code>preparation</code>. Keying off canonical <code>ingredientId</code> is what makes <strong>custom local cook plans</strong> (recipes mixed from any week) work — there is no per-week shared authoring to depend on.
+  </div>
+
+  <h2 id="state">ViewModel &amp; state</h2>
+  <p>Replace <code>CookViewModel</code>. One screen, two phases, independent per-phase lane visibility.</p>
+  <pre><code>enum class CookPhase { MISE, COOK }
+
+data class LaneId(val value: String)   // recipeId, or "shared"
+
+data class CookUiState(
+    val phase: CookPhase = CookPhase.COOK,
+    val guides: List&lt;RecipeCookGuide&gt;,
+    val sharedSteps: List&lt;SharedStep&gt;,
+    val miseGuides: List&lt;RecipeMiseGuide&gt;,
+    val sharedBowls: List&lt;MiseBowl&gt;,
+
+    // INDEPENDENT per phase — do not share between Mise and Cook
+    val visibleByPhase: Map&lt;CookPhase, List&lt;LaneId&gt;&gt;,
+
+    // cook progress
+    val stepIndex: Map&lt;RecipeId, Int&gt;,
+    val sharedStepIndex: Int,
+    val completed: Set&lt;RecipeId&gt;,
+
+    // mise progress (persisted)
+    val checkedBowls: Set&lt;BowlId&gt;,
+
+    // timers (command bar)
+    val timers: List&lt;ActiveTimer&gt;,
+    val startedTimerStepIds: Set&lt;String&gt;,
+)
+
+// intents
+fun setPhase(p: CookPhase)
+fun toggleLane(phase: CookPhase, id: LaneId)   // also emits a "scroll to lane" effect
+fun advanceRecipe(id: RecipeId, delta: Int)    // +1 past last → mark complete + hide lane
+fun advanceShared(delta: Int)
+fun toggleBowl(id: BowlId)
+fun startStepTimer(step: CookStep)
+fun dismissTimer(timerId: String)</code></pre>
+  <p>Status per chip is derived: <strong>Cook</strong> → <code>done</code> if completed, else <code>active</code> if a stepIndex exists, else <code>queued</code>. <strong>Mise</strong> → <code>done</code> if all the recipe's bowls are checked, else <code>active</code>.</p>
+
+  <h2 id="composables">Composable tree</h2>
+  <pre><code>ui/screen/cook/
+├── CookScreen.kt              // collects state; routes phone vs tablet (tablet-first)
+├── CookTabletScreen.kt        // Column { Title+Toggle; CommandBar; LaneScroller }
+├── components/
+│   ├── PhaseToggle.kt         // Mise | Cook segmented
+│   ├── CommandBar.kt          // recipes group (chips) | divider | timers group
+│   ├── RecipeCommandChip.kt   // emoji + name + status dot + progress; toggles lane
+│   ├── SharedCommandChip.kt   // 🍚 + emojis + count
+│   ├── RunningTimerChip.kt    // mm:ss + title; tap = dismiss
+│   ├── LaneScroller.kt        // HorizontalLane row, snap, edge fade+chevron
+│   ├── CookLane.kt            // header + StepCard + back/next footer
+│   ├── MiseLane.kt            // header + vertical bowl checklist
+│   ├── SharedCookLane.kt      // neutral header + shared StepCard + back/next
+│   ├── SharedMiseLane.kt      // neutral header + shared bowl checklist
+│   ├── StepCard.kt            // clock-less; bulleted task; Meanwhile; start-timer button
+│   ├── MiseBowlCard.kt        // expanded ↔ collapsed (checked) states
+│   ├── LaneHeader.kt          // recipe identity + status label + ProgressDots
+│   └── ProgressDots.kt
+└── CookViewModel.kt</code></pre>
+
+  <h2 id="command">CommandBar spec</h2>
+  <ul>
+    <li><code>Row</code> with two groups separated by a 1dp divider; each group is a horizontally-scrollable <code>LazyRow</code>.</li>
+    <li><strong>Recipes group</strong>: <code>SharedCommandChip</code> first, then a <code>RecipeCommandChip</code> per cookable recipe. Chip = rounded pill; selected (visible) = recipe-wash fill + 1.5dp recipe-colored ring; done+hidden = 55% alpha.</li>
+    <li>Chip internals: 26dp emoji circle (with a small green check badge when done) · name (first two words) · second row = status dot + progress text (<code>5/9</code> cook, <code>0/3 bowls</code> mise, or "queued"/"done").</li>
+    <li><strong>Timers group</strong>: label "Timers · N running", then running chips or "None running".</li>
+    <li>Tapping a chip → <code>toggleLane</code>; if it becomes visible, fire a one-shot effect to <code>animateScrollToItem</code> the lane in the scroller.</li>
+  </ul>
+
+  <h2 id="lane">Lane specs</h2>
+  <h3>Common</h3>
+  <p>Fixed width = <code>(viewportWidth − horizontalPadding*2 − gap*2) / 3</code>, min ≈ 280dp. <code>Column</code>: header (recipe identity + bold status label like "Step 5 of 9" in <code>ink-2</code> 12sp 600 + <code>ProgressDots</code>) / body / footer. Recipe lanes carry a 3dp recipe-color top border; shared lanes use <code>accent-soft</code>.</p>
+  <h3>CookLane</h3>
+  <ul>
+    <li>Body = one <code>StepCard</code> for the current step (vertically scrollable; reuse the v1 fade+chevron overflow indicator).</li>
+    <li>Footer = Back (icon) + primary <strong>Next step</strong>. On the last step the primary becomes <strong>Done · finish</strong> (green); tapping it calls <code>advanceRecipe(+1)</code> → marks complete and removes the lane.</li>
+  </ul>
+  <h3>StepCard (clock-less)</h3>
+  <ul>
+    <li><strong>No clock/step-number header row</strong> (removed in v2 — redundant with the lane header).</li>
+    <li>Task as bulleted serif lines (each item of <code>cookStep.steps: List&lt;String&gt;</code> — v3 renamed <code>task</code>→<code>steps</code>; already a list of prose lines, no <code>InstructionStep</code> wrapper).</li>
+    <li>"Meanwhile" block for <code>handsOff</code> (unchanged).</li>
+    <li>If <code>step.timer != null &amp;&amp; step.id !in startedTimerStepIds</code>: a dark "Start timer · {timer.label} · mm:ss" button → <code>startStepTimer</code>. Once started: a muted "{timer.label} running · see top bar" row. (v3 <code>Timer</code> = <code>{label, durationSeconds}</code>.)</li>
+  </ul>
+  <h3>MiseLane &amp; MiseBowlCard</h3>
+  <ul>
+    <li>Body = vertical list of <code>MiseBowlCard</code>. No footer.</li>
+    <li><strong>Expanded</strong> (unchecked): bowl ordinal (from list index — v3 has no <code>bowlNumber</code>) · (shared: recipe emojis) · checkbox; name (serif 16sp); bulleted ingredient lines (<code>ingredients[].quantity</code>+<code>unit</code> mono + <code>name</code>); the bowl's prose <code>steps</code> (v3 renamed <code>instruction</code>→<code>steps: List&lt;String&gt;</code>, max 3 lines).</li>
+    <li><strong>Collapsed</strong> (checked): single tight row — bowl number + name (strikethrough, ellipsis) + checkbox, <code>surface-2</code> bg, 70% alpha. Tapping the checkbox toggles back.</li>
+    <li>Header status = "<code>{checked}/{total}</code> bowls"; done when all checked.</li>
+  </ul>
+
+  <h2 id="scroll">Horizontal snap-scroll</h2>
+  <ul>
+    <li><code>LazyRow</code> with <code>rememberLazyListState()</code> + <code>rememberSnapFlingBehavior(lazyListState)</code> so lanes page one at a time.</li>
+    <li>3 lanes per viewport (fixed lane width as above; gap 12dp; content padding 16dp).</li>
+    <li>Right-edge overflow hint: when <code>canScrollForward</code>, overlay a gradient (bg→transparent) + a 30dp circular chevron, <code>pointerEvents</code> off.</li>
+    <li>Do <strong>not</strong> use any "scroll into view on focus" that fights the user; the only programmatic scroll is the command-chip-tap → <code>animateScrollToItem</code>.</li>
+  </ul>
+
+  <h2 id="timers">Timers</h2>
+  <p>Same model and behavior as the original handoff (in-memory tick for display + <code>AlarmManager</code> for the real fire, foreground service, notification on expiry while backgrounded). The only UI change: running timers render as chips in the <strong>command bar</strong>, and the start affordance is the in-card "Start timer" button. <code>ActiveTimer</code> gains <code>stepId</code> so a started step can be detected for the pending→running swap.</p>
+
+  <h2 id="persistence">Persistence</h2>
+  <p>Per the original handoff, persist user state keyed by <code>cookCardId</code> across process death. For v2 this now includes, additionally:</p>
+  <ul>
+    <li><strong>Per-phase lane visibility</strong> (Mise set + Cook set).</li>
+    <li>Cook <strong>step indices</strong> per recipe + shared, and the <strong>completed</strong> set.</li>
+    <li>Mise <strong>checked bowls</strong> (already in scope from v1's mise checklist).</li>
+    <li><strong>Started-timer step ids</strong> (already in scope).</li>
+  </ul>
+
+  <h2 id="nav">Navigation &amp; Phase 0 fold-in</h2>
+  <ul>
+    <li>The Cook route no longer carries a phase-0 concept. Keep <code>Cook(initialStepId?)</code>; optionally add <code>initialPhase: CookPhase</code> so Home's phase jump-links can deep-link to Mise or Cook.</li>
+    <li><strong>Phase 0 → Cook (v3):</strong> there is no Phase 0 in the data — long-running kickoffs are the leading steps of each recipe's <code>cookPhase</code>, flagged <code>cookStep.backgroundable=true</code>. Surface them first in each recipe's cook lane; the app's shared-cook derivation hoists any that match across the selected recipes (same <code>ingredientId</code>+<code>preparation</code>, e.g. rice). The Cook tab renders no separate Phase 0; the Schedule tab is unchanged.</li>
+  </ul>
+
+  <h2 id="tests">Tests</h2>
+  <ul>
+    <li><code>BuildCookGuidesUseCaseTest</code> — selected v3 recipes → one cook guide each from <code>cookPhase.steps</code>; a no-cook recipe (chia: a single assemble/chill step) yields a trivial lane; two recipes with a <code>backgroundable</code> step sharing <code>ingredientId</code>+<code>preparation</code> (e.g. <code>white-rice</code>) produce one shared cook step carrying both <code>recipeIds</code>.</li>
+    <li><code>BuildMiseGuidesUseCaseTest</code> — two recipes whose bowls share an ingredient with matching <code>(ingredientId, unit, preparation)</code> → that ingredient merges into the shared mise track (quantities summed); <code>combinable=false</code> items stay per-recipe.</li>
+    <li><code>CookViewModelTest</code> (Turbine): toggleLane is independent per phase; advanceRecipe past last marks complete + removes lane; startStepTimer moves pending→running and adds stepId; toggleBowl flips checked.</li>
+    <li><code>CookTabletScreenTest</code> (createComposeRule): Mise/Cook toggle swaps lane bodies; tapping a hidden recipe chip shows its lane; "Done · finish" removes a lane but leaves its chip; checking a mise bowl collapses the card (assert ingredient text gone, name present).</li>
+    <li><code>LaneScrollerTest</code> — with 4+ visible lanes, the edge chevron appears; tapping an off-screen chip scrolls it into view.</li>
+  </ul>
+
+  <h2 id="acceptance">Acceptance criteria</h2>
+  <ol>
+    <li>Cook tab renders the Mise/Cook toggle; Phase 0 no longer appears as a separate phase — its long-running tasks are surfaced inside the Cook stage (per-recipe or shared cook lane).</li>
+    <li>Each recipe advances independently; shared lane is separate; finishing a recipe clears its lane while its chip remains to re-open.</li>
+    <li>Mise lanes are per-recipe checklists + a shared mise lane; checking a bowl collapses it.</li>
+    <li>Command bar toggles lanes, shows correct status per chip, and acts as a pager; lane visibility is independent between Mise and Cook.</li>
+    <li>Three lanes per tablet viewport; more scroll horizontally with snap + edge hint.</li>
+    <li>Timers run in the command bar; "Start timer" in a step card moves it there; expiry behavior (alarm/notification) unchanged from v1.</li>
+    <li>All listed unit + Compose tests pass; layout matches the two screenshots at tablet width.</li>
+  </ol>
+
+  <div class="callout">
+    <div class="callout-label">Reference prototype</div>
+    The working prototype is <code>Cook Redesign.html</code> (root), components in <code>app/screen-cook-v2.jsx</code>. Read it to disambiguate spacing, colors, and interaction details the spec leaves implicit.
+  </div>
+</div>
+</body>
+</html>

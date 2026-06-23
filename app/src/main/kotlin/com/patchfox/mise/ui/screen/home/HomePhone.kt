@@ -29,25 +29,23 @@ import com.patchfox.mise.domain.model.CookCard
 import com.patchfox.mise.domain.model.PrepTaskId
 import com.patchfox.mise.domain.model.Recipe
 import com.patchfox.mise.domain.model.RecipeId
-import com.patchfox.mise.domain.model.phase0
-import com.patchfox.mise.domain.model.phase1
-import com.patchfox.mise.domain.model.phase2
+import com.patchfox.mise.domain.model.totalActiveMinutes
 import com.patchfox.mise.ui.component.HeroCookDayCard
 import com.patchfox.mise.ui.component.HeroCookDayStats
 import com.patchfox.mise.ui.component.MiseCard
-import com.patchfox.mise.ui.component.PhaseTab
 import com.patchfox.mise.ui.component.PrepWorkList
 import com.patchfox.mise.ui.component.RecipeColorBand
+import com.patchfox.mise.ui.state.CookStage
 import com.patchfox.mise.ui.theme.MiseTokens
 import com.patchfox.mise.ui.theme.recipe
-import com.patchfox.mise.ui.theme.recipeWash
+import kotlin.math.roundToInt
 
 @Composable
 fun HomePhone(
     state: HomeUiState,
     onTogglePrep: (PrepTaskId, Boolean) -> Unit,
     onWalkPlan: () -> Unit,
-    onOpenPhase: (PhaseTab) -> Unit,
+    onOpenStage: (CookStage) -> Unit,
     onOpenRecipe: (RecipeId) -> Unit,
 ) {
     if (state.loading && state.card == null) {
@@ -76,10 +74,10 @@ fun HomePhone(
                 dayLabel = card.cookDate.dayOfWeek.name.lowercase().replaceFirstChar { it.titlecase() } + " /",
                 italicTail = "tomorrow.",
                 stats = HeroCookDayStats(
-                    activeMinutes = card.cookPlan.totalActiveMinutes,
-                    stepCount = card.phase2()?.steps?.size ?: 0,
+                    activeMinutes = card.totalActiveMinutes(),
+                    stepCount = card.recipes.sumOf { it.cookPhase.steps.size },
                     recipeCount = card.recipes.size,
-                    bowlCount = card.phase1()?.bowls?.size ?: 0,
+                    bowlCount = card.recipes.sumOf { it.misePhase.bowls.size },
                 ),
                 onCta = onWalkPlan,
             )
@@ -103,11 +101,11 @@ fun HomePhone(
             Spacer(Modifier.height(22.dp))
         }
         item {
-            Text("COOK PHASES", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
+            Text("COOK STAGES", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
             Spacer(Modifier.height(8.dp))
         }
         item {
-            CookPhaseRows(card, onOpenPhase)
+            CookStageRows(card, onOpenStage)
         }
     }
 }
@@ -151,7 +149,8 @@ private fun RecipeCard(recipe: Recipe, onOpenRecipe: (RecipeId) -> Unit) {
                 Spacer(Modifier.height(10.dp))
                 val perServing = recipe.perServing
                 Text(
-                    "${perServing.calories.toInt()} kcal · ${perServing.proteinGrams.toInt()}g P · ${recipe.yield.servings} servings",
+                    "${perServing.calories.toInt()} kcal · ${perServing.proteinGrams.toInt()}g P" +
+                        (recipe.yield.servings?.let { " · $it servings" } ?: ""),
                     style = MiseTokens.text.clock.copy(fontSize = MiseTokens.text.small.fontSize),
                     color = MiseTokens.colors.ink3,
                 )
@@ -161,34 +160,45 @@ private fun RecipeCard(recipe: Recipe, onOpenRecipe: (RecipeId) -> Unit) {
 }
 
 @Composable
-private fun CookPhaseRows(card: CookCard, onOpenPhase: (PhaseTab) -> Unit) {
-    data class PhaseRow(val label: String, val hint: String, val tab: PhaseTab)
-    val rows = listOfNotNull(
-        card.phase0()?.let { PhaseRow(it.label, "${it.steps.size} steps · ${it.estimatedMinutes} min", PhaseTab.Phase0) },
-        card.phase1()?.let { PhaseRow(it.label, "${it.bowls.size} bowls · ${it.estimatedMinutes} min", PhaseTab.Phase1) },
-        card.phase2()?.let { PhaseRow(it.label, "${it.steps.size} steps · ${it.estimatedMinutes} min", PhaseTab.Phase2) },
-    )
+private fun CookStageRows(card: CookCard, onOpenStage: (CookStage) -> Unit) {
+    val rows = cookStageRows(card)
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         rows.forEach { row ->
-            val (label, hint) = row.label to row.hint
             MiseCard(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { onOpenPhase(row.tab) },
+                onClick = { onOpenStage(row.stage) },
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(label, style = MiseTokens.text.bodyEmphasis, color = MiseTokens.colors.ink)
+                        Text(row.label, style = MiseTokens.text.bodyEmphasis, color = MiseTokens.colors.ink)
                         Spacer(Modifier.height(2.dp))
-                        Text(hint, style = MiseTokens.text.small, color = MiseTokens.colors.ink3)
+                        Text(row.hint, style = MiseTokens.text.small, color = MiseTokens.colors.ink3)
                     }
                     Icon(Icons.Filled.KeyboardArrowRight, null, tint = MiseTokens.colors.ink3)
                 }
             }
         }
     }
+}
+
+internal data class CookStageRow(val label: String, val hint: String, val stage: CookStage)
+
+/**
+ * Two aggregate stage rows derived from every recipe's mise/cook phase.
+ * Phase 0 is gone in v3 — its long-running kickoffs are folded into Cook.
+ */
+internal fun cookStageRows(card: CookCard): List<CookStageRow> {
+    val bowlCount = card.recipes.sumOf { it.misePhase.bowls.size }
+    val miseMinutes = card.recipes.sumOf { it.misePhase.durationMinutes ?: 0.0 }.roundToInt()
+    val stepCount = card.recipes.sumOf { it.cookPhase.steps.size }
+    val cookMinutes = card.recipes.sumOf { it.cookPhase.durationMinutes ?: 0.0 }.roundToInt()
+    return listOf(
+        CookStageRow("Mise en place", "$bowlCount bowls · $miseMinutes min", CookStage.MISE),
+        CookStageRow("Cook", "$stepCount steps · $cookMinutes min", CookStage.COOK),
+    )
 }
 
 @Composable

@@ -38,6 +38,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.patchfox.mise.domain.model.ColorTag
+import com.patchfox.mise.domain.model.Ingredient
 import com.patchfox.mise.domain.model.Recipe
 import com.patchfox.mise.ui.component.ColorTagCallout
 import com.patchfox.mise.ui.component.DotLeaderRow
@@ -172,8 +174,9 @@ private fun RecipeDetailContent(recipe: Recipe, onOpenInstructions: () -> Unit) 
                     .background(MiseTokens.colors.recipeWash(recipe.color), RoundedCornerShape(999.dp))
                     .padding(horizontal = 12.dp, vertical = 6.dp),
             ) {
+                val servings = recipe.yield.servings
                 Text(
-                    recipe.type.name + " · SERVES " + recipe.yield.servings,
+                    if (servings != null) recipe.type.name + " · SERVES " + servings else recipe.type.name,
                     style = MiseTokens.text.micro,
                     color = MiseTokens.colors.recipe(recipe.color),
                 )
@@ -212,21 +215,34 @@ private fun RecipeDetailContent(recipe: Recipe, onOpenInstructions: () -> Unit) 
             }
         }
 
-        if (recipe.colorTag != null && !recipe.colorTagDescription.isNullOrBlank()) {
-            ColorTagCallout(tag = recipe.colorTag, description = recipe.colorTagDescription!!)
+        // Optional note callout — sourced from the mise/cook phase descriptions in v3.
+        val note = recipe.misePhase.description?.takeIf { it.isNotBlank() }
+            ?: recipe.cookPhase.description?.takeIf { it.isNotBlank() }
+        if (note != null) {
+            ColorTagCallout(tag = ColorTag.NOTE, description = note)
         }
 
-        // Ingredients
-        Text("INGREDIENTS", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
-        Column {
-            recipe.ingredients.forEach { ing ->
-                DotLeaderRow(name = ing.name, quantity = ing.batchQuantity)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(MiseTokens.colors.line),
-                )
+        // Ingredients — union of mise-bowl + cook-step ingredients, deduped by ingredientId.
+        val ingredients: List<Ingredient> = remember(recipe) {
+            (recipe.misePhase.bowls.flatMap { it.ingredients } +
+                recipe.cookPhase.steps.flatMap { it.ingredients })
+                .distinctBy { it.ingredientId }
+        }
+        if (ingredients.isNotEmpty()) {
+            Text("INGREDIENTS", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
+            Column {
+                ingredients.forEach { ing ->
+                    DotLeaderRow(
+                        name = ing.name,
+                        quantity = listOfNotNull(ing.quantityDisplay, ing.unit).joinToString(" ").trim(),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(MiseTokens.colors.line),
+                    )
+                }
             }
         }
 
@@ -246,34 +262,37 @@ private fun RecipeDetailContent(recipe: Recipe, onOpenInstructions: () -> Unit) 
             }
         }
 
-        // Reheat
-        Text("REHEAT", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
-        MiseCard(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .background(MiseTokens.colors.recipe(recipe.color), RoundedCornerShape(999.dp)),
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Text(recipe.reheat.method, style = MiseTokens.text.bodyEmphasis, color = MiseTokens.colors.ink, modifier = Modifier.weight(1f))
-                    if (recipe.reheat.timeSeconds != null) {
-                        Text(
-                            if (recipe.reheat.timeSeconds!! >= 60) "${recipe.reheat.timeSeconds!! / 60}m ${recipe.reheat.timeSeconds!! % 60}s"
-                            else "${recipe.reheat.timeSeconds}s",
-                            style = MiseTokens.text.clock,
-                            color = MiseTokens.colors.ink2,
+        // Reheat — nullable in v3; skip the card entirely when absent.
+        val reheat = recipe.reheat
+        if (reheat != null) {
+            Text("REHEAT", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
+            MiseCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .background(MiseTokens.colors.recipe(recipe.color), RoundedCornerShape(999.dp)),
                         )
+                        Spacer(Modifier.width(12.dp))
+                        Text(reheat.method, style = MiseTokens.text.bodyEmphasis, color = MiseTokens.colors.ink, modifier = Modifier.weight(1f))
+                        val seconds = reheat.timeSeconds
+                        if (seconds != null) {
+                            Text(
+                                if (seconds >= 60) "${seconds / 60}m ${seconds % 60}s" else "${seconds}s",
+                                style = MiseTokens.text.clock,
+                                color = MiseTokens.colors.ink2,
+                            )
+                        }
                     }
-                }
-                if (recipe.reheat.extraSteps.isNotEmpty()) {
-                    Spacer(Modifier.height(10.dp))
-                    recipe.reheat.extraSteps.forEach { step ->
-                        Row {
-                            Text("·", style = MiseTokens.text.body, color = MiseTokens.colors.ink3)
-                            Spacer(Modifier.width(8.dp))
-                            Text(step, style = MiseTokens.text.small, color = MiseTokens.colors.ink2)
+                    if (reheat.extraSteps.isNotEmpty()) {
+                        Spacer(Modifier.height(10.dp))
+                        reheat.extraSteps.forEach { step ->
+                            Row {
+                                Text("·", style = MiseTokens.text.body, color = MiseTokens.colors.ink3)
+                                Spacer(Modifier.width(8.dp))
+                                Text(step, style = MiseTokens.text.small, color = MiseTokens.colors.ink2)
+                            }
                         }
                     }
                 }

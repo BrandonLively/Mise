@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>mise — Cook Screen Redesign · Design Delta</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  :root{--bg:#f3ece1;--surface:#faf5ec;--surface-2:#ede4d3;--ink:#2a1f17;--ink-2:#5a4838;--ink-3:#8b7a68;--line:rgba(42,31,23,0.10);--line-strong:rgba(42,31,23,0.18);--accent:#b8533a;--accent-soft:#e3a685;--accent-wash:#f5e3d6;--c-blue:#4d6e8c;--c-green:#6b8e5a;--c-purple:#8a6da3;--c-yellow:#c69a2e;--c-red:#b8533a;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Geist',system-ui,sans-serif;line-height:1.55;}
+  .doc{max-width:920px;margin:0 auto;padding:56px 36px 120px;}
+  h1,h2,h3,h4{font-family:'Instrument Serif',Georgia,serif;font-weight:400;letter-spacing:-0.01em;}
+  h1{font-size:60px;line-height:0.98;margin:0 0 14px;letter-spacing:-0.025em;}
+  h2{font-size:34px;margin:54px 0 16px;padding-top:26px;border-top:1px solid var(--line);}
+  h2:first-of-type{border-top:none;padding-top:0;margin-top:32px;}
+  h3{font-size:23px;margin:30px 0 12px;}
+  h4{font-size:17px;font-family:'Geist';font-weight:600;margin:20px 0 8px;}
+  p{margin:0 0 14px;font-size:15px;}
+  strong{font-weight:600;} em{color:var(--accent);font-style:italic;}
+  .lede{font-size:18px;line-height:1.5;color:var(--ink-2);margin-bottom:30px;max-width:720px;}
+  .micro{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  ul,ol{margin:0 0 14px;padding-left:22px;font-size:15px;} li{margin-bottom:6px;}
+  code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--surface-2);padding:1.5px 5px;border-radius:4px;}
+  pre{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.55;}
+  pre code{background:transparent;padding:0;}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-3);}
+  td.old{color:var(--ink-3);} td.new{color:var(--ink);}
+  figure{margin:22px 0;}
+  figure img{width:100%;border-radius:12px;border:1px solid var(--line);display:block;}
+  figcaption{font-size:12px;color:var(--ink-3);margin-top:8px;font-family:'JetBrains Mono',monospace;}
+  .callout{border-left:3px solid var(--accent);background:var(--accent-wash);padding:14px 18px;border-radius:0 12px 12px 0;margin:18px 0;font-size:14px;}
+  .callout-label{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:4px;}
+  .callout-blue{border-left-color:var(--c-blue);background:color-mix(in oklab,var(--c-blue) 10%,var(--surface));}
+  .callout-blue .callout-label{color:var(--c-blue);}
+  .callout-green{border-left-color:var(--c-green);background:color-mix(in oklab,var(--c-green) 10%,var(--surface));}
+  .callout-green .callout-label{color:var(--c-green);}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 24px;margin-bottom:34px;}
+  .toc h4{margin-top:0;} .toc ol{columns:2;column-gap:24px;font-size:14px;}
+  .toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent;}
+  .toc a:hover{border-color:var(--ink-3);}
+  .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;padding:3px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);margin:0 4px 4px 0;}
+  .keep{background:color-mix(in oklab,var(--c-green) 16%,var(--surface));color:var(--c-green);}
+  .change{background:var(--accent-wash);color:var(--accent);}
+  .new{background:color-mix(in oklab,var(--c-blue) 16%,var(--surface));color:var(--c-blue);}
+  .remove{background:var(--surface-2);color:var(--ink-3);}
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="micro">Design delta · cook screen v1 → v2</div>
+  <h1>Cook screen, rebuilt around <em>per-recipe lanes</em>.</h1>
+  <p class="lede">The app today ships the original combined cook flow (one interleaved 22-step sequence with Phase 0/1/2 tabs). This document describes the move to the new model: every recipe gets its own independent guide, shared work is hoisted into a shared lane, and a command bar conducts the whole session. This is the <strong>what-changes</strong> doc; the companion <strong>Android Handoff</strong> covers the Compose-level implementation.</p>
+
+  <div class="callout">
+    <div class="callout-label">Status</div>
+    The existing app matches the <strong>original</strong> design (see <code>handoff/Claude Code prompt.html</code>). Everything outside the Cook tab — Login, Home/Schedule, Summary, Recipe drill-down, theme, navigation, auth, data sync — is <strong>unchanged</strong>. This delta touches the Cook tab only (plus one small addition to the Schedule tab).
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-label">Data update · cook-card v3 (2026-06)</div>
+    Since this delta was first written, the card moved to <strong>cook-card.v3</strong>: each recipe is <strong>self-contained</strong> (its own <code>misePhase</code> + <code>cookPhase</code>), with <strong>no shared <code>cookPlan</code></strong> and <strong>no server-authored shared data</strong>. The <strong>Shared lane is generated app-side</strong> from the recipes in the current plan — by design, so the user can build <strong>custom local plans</strong> from recipes of any week. The UI in this doc is unchanged; only "where shared work comes from" changes — see <em>Data shape implications</em> (rewritten) below.
+  </div>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#tldr">The change in one breath</a></li>
+      <li><a href="#model">Mental model: combined → per-recipe</a></li>
+      <li><a href="#phases">Phases: three tabs → toggle + Schedule</a></li>
+      <li><a href="#screens">Side-by-side: old vs new</a></li>
+      <li><a href="#command">New: the command bar</a></li>
+      <li><a href="#lanes">New: lanes (cook + mise)</a></li>
+      <li><a href="#shared">New: the shared lane</a></li>
+      <li><a href="#timers">Timers, re-homed</a></li>
+      <li><a href="#component-delta">Component-by-component delta</a></li>
+      <li><a href="#data">Data shape implications</a></li>
+      <li><a href="#open">Behavior notes for the build</a></li>
+    </ol>
+  </div>
+
+  <h2 id="tldr">The change in one breath</h2>
+  <p>The old Cook screen showed <strong>one merged timeline</strong> of all four recipes' steps, ordered by clock time, walked with a single swipeable card. The new Cook screen shows <strong>one lane per recipe</strong>, each an independent guide you advance on its own, with work common to multiple recipes pulled into a dedicated <strong>shared lane</strong>. A <strong>command bar</strong> at the top toggles which lanes are visible and tracks running timers. This applies to both the <strong>Mise</strong> and <strong>Cook</strong> stages, switched by a toggle.</p>
+
+  <figure>
+    <img src="screenshots-v2/01-cook-lanes.png" alt="New cook screen — lanes, cook phase" />
+    <figcaption>screenshots-v2/01-cook-lanes.png · new Cook phase — Shared lane + per-recipe lanes, command bar on top</figcaption>
+  </figure>
+
+  <h2 id="model">Mental model: combined → per-recipe</h2>
+  <table>
+    <tr><th>Aspect</th><th>Original (v1)</th><th>New (v2)</th></tr>
+    <tr><td>Unit of progress</td><td class="old">One global step index across all recipes (22 steps)</td><td class="new">One step index <em>per recipe</em>, advanced independently</td></tr>
+    <tr><td>Ordering</td><td class="old">Steps interleaved by <code>clockTime</code></td><td class="new">Each recipe is its own clean sequence; no cross-recipe interleave</td></tr>
+    <tr><td>Multi-tasking</td><td class="old">Implicit — the merged timeline jumps between recipes</td><td class="new">Explicit — lanes sit side by side; you choose which to advance</td></tr>
+    <tr><td>Shared work</td><td class="old">Appears as ordinary steps in the timeline</td><td class="new">Hoisted into a <strong>shared lane</strong>, done once, split across recipes</td></tr>
+    <tr><td>Clearing finished recipes</td><td class="old">n/a (single flow)</td><td class="new">Finishing a recipe removes its lane; chip stays in the bar to re-open</td></tr>
+    <tr><td>Primary device</td><td class="old">Phone-first, tablet adaptive</td><td class="new"><strong>Tablet-first</strong> (3 lanes per view); phone is a follow-up</td></tr>
+  </table>
+
+  <h2 id="phases">Phases: three tabs → toggle (Phase 0 folded into Cook)</h2>
+  <p>The original Cook screen had a 3-segment phase control: <strong>Phase 0 (Kickoff) · Phase 1 (Mise) · Phase 2 (Cook)</strong>. In the new model:</p>
+  <ul>
+    <li><span class="tag change">merged into Cook</span> <strong>Phase 0 — long-running tasks</strong> (start marinade, move avocados to ripen, get rice going) are now the leading steps of each recipe's <code>cookPhase</code>, flagged <code>cookStep.backgroundable=true</code> — not a separate phase or a Schedule item. The app surfaces them first in each recipe's cook lane; cross-recipe ones (e.g. rice) are hoisted into the shared cook lane by the app's derivation.</li>
+    <li><span class="tag change">becomes a toggle</span> With Phase 0 absorbed, only <strong>Mise</strong> and <strong>Cook</strong> remain — so the 3-segment control becomes a simple <strong>Mise / Cook</strong> toggle in the title row.</li>
+  </ul>
+  <div class="callout callout-blue">
+    <div class="callout-label">Note · independent per-phase state</div>
+    Which lanes are visible must be tracked <strong>separately for Mise and for Cook</strong>. Opening the Chicken lane in Cook must NOT open it in Mise. Model it as two sets (or <code>Map&lt;Phase, Set&lt;LaneId&gt;&gt;</code>).
+  </div>
+
+  <h2 id="screens">Side-by-side: old vs new</h2>
+  <h3>Cook phase</h3>
+  <figure>
+    <img src="screenshots-v2/01-cook-lanes.png" alt="Cook phase lanes" />
+    <figcaption>New Cook phase. Each lane: recipe header + status ("Step 5 of 9") + progress dots, one step card with bulleted task + "Meanwhile" block, back / Next-step footer. Shared lane (leftmost) holds combined steps. Command bar: recipe toggle chips + running timer.</figcaption>
+  </figure>
+  <p><strong>Carried over from v1</strong> <span class="tag keep">keep</span>: the warm-paper theme, recipe color coding, the step-card task as bulleted lines, the "Meanwhile / running in background" block, the JSON-driven step timer concept, the scrollable-card fade indicator.</p>
+  <p><strong>Gone</strong> <span class="tag remove">remove</span>: the single full-bleed swipe card, the global progress bar, the bottom filmstrip of all 22 steps, the merged step counter.</p>
+
+  <h3>Mise phase</h3>
+  <figure>
+    <img src="screenshots-v2/02-mise-lanes.png" alt="Mise phase lanes" />
+    <figcaption>screenshots-v2/02-mise-lanes.png · New Mise phase. Same chrome as Cook, but each lane is a vertical checklist of that recipe's bowls; the shared lane holds bowls feeding multiple recipes (Bowl 7 master cilantro garnish). Checking a bowl collapses its card to just number + name.</figcaption>
+  </figure>
+  <p><strong>From v1</strong>: the old Mise was a single flat checklist of all 9 bowls ("least-to-most odoriferous"). <strong>Now</strong>: bowls are grouped per recipe into lanes, with shared bowls in the shared lane. The check-to-complete idea is kept and extended with <strong>collapse-on-check</strong> (a checked bowl shrinks to bowl number + name to reclaim space).</p>
+
+  <h2 id="command">New: the command bar</h2>
+  <p>A horizontal control strip below the title, split into two groups by a divider:</p>
+  <ul>
+    <li><strong>Recipes</strong> (left) — a chip per recipe plus a <strong>Shared</strong> chip. Tapping a chip shows/hides that lane <em>and</em> scrolls it into view (the bar doubles as a pager). Each chip carries a <strong>status</strong>: <span class="tag">queued</span> (outline, muted), <span class="tag">in-progress</span> (filled wash, accent dot, progress like <code>5/9</code>), <span class="tag">done</span> (dimmed, green check, strikethrough). The Shared chip shows a count (<code>1/2</code> steps, or checked-bowls in Mise).</li>
+    <li><strong>Timers</strong> (right) — running timer chips (mm:ss + title + recipe color), or "None running". Tap a chip to dismiss.</li>
+  </ul>
+
+  <h2 id="lanes">New: lanes (cook + mise)</h2>
+  <p>A lane is a fixed-width column (3 fit the viewport; more scroll horizontally with snap). Common anatomy: <strong>header</strong> (recipe identity + status label + progress dots), <strong>body</strong> (scrollable), <strong>footer</strong> (controls). The body and footer differ by phase:</p>
+  <table>
+    <tr><th></th><th>Cook lane</th><th>Mise lane</th></tr>
+    <tr><td>Body</td><td>One <strong>step card</strong> at a time (current step)</td><td>Vertical <strong>checklist</strong> of all the recipe's bowl cards</td></tr>
+    <tr><td>Footer</td><td>Back · <strong>Next step</strong> (last step → <strong>Done · finish</strong>, which removes the lane)</td><td>None — you tick bowls down the column</td></tr>
+    <tr><td>Done state</td><td>All steps complete</td><td>All bowls checked</td></tr>
+  </table>
+
+  <h2 id="shared">New: the shared lane</h2>
+  <p>Work common to multiple recipes is <strong>computed by the app</strong> from the recipes in the current plan (not authored on the card) and rendered in a dedicated lane with neutral/accent styling (not a single recipe color) and the participating recipe emojis. Examples: <em>cook the rice</em> (🍗+🍤 — two recipes whose <code>backgroundable</code> rice steps share <code>ingredientId</code>+<code>preparation</code>); a <em>shared diced-onion</em> bowl in Mise (the same <code>(ingredientId, unit, preparation)</code> across recipes, quantities summed). In Cook the shared lane steps sequentially (back/next); in Mise it's a checklist like any lane.</p>
+
+  <h2 id="timers">Timers, re-homed</h2>
+  <table>
+    <tr><th></th><th>Original (v1)</th><th>New (v2)</th></tr>
+    <tr><td>Where running timers live</td><td class="old">A dedicated timers strip / right panel</td><td class="new">In the <strong>command bar</strong> (top), one row, scrollable</td></tr>
+    <tr><td>How a timer starts</td><td class="old">"Start timer" CTA in the step area</td><td class="new">A compact "Start timer · {timer.label} · mm:ss" button inside the step card; on tap it moves to the command bar as a running chip</td></tr>
+    <tr><td>Source of truth</td><td class="old"><code>step.timer = {title, durationSeconds}</code></td><td class="new"><strong>Same field/model</strong>; v3 names it <code>{label, durationSeconds}</code></td></tr>
+  </table>
+
+  <h2 id="component-delta">Component-by-component delta</h2>
+  <table>
+    <tr><th>Component</th><th>Disposition</th><th>Notes</th></tr>
+    <tr><td>PhaseTabs (3-seg)</td><td><span class="tag change">replace</span></td><td>→ Mise/Cook toggle; Phase 0 folded into the Cook stage</td></tr>
+    <tr><td>Big swipe step card</td><td><span class="tag change">re-scope</span></td><td>Still a step card, but one per lane (narrower), no full-screen swipe</td></tr>
+    <tr><td>Global progress bar</td><td><span class="tag remove">remove</span></td><td>Replaced by per-lane progress dots + command-bar status</td></tr>
+    <tr><td>Bottom filmstrip</td><td><span class="tag remove">remove</span></td><td>Replaced by command-bar chips as the pager</td></tr>
+    <tr><td>Mise flat checklist</td><td><span class="tag change">restructure</span></td><td>→ per-recipe mise lanes + shared mise lane; collapse-on-check</td></tr>
+    <tr><td>Timers strip / panel</td><td><span class="tag change">move</span></td><td>→ command-bar timers group</td></tr>
+    <tr><td>Command bar</td><td><span class="tag new">new</span></td><td>Recipe toggle chips (status) + timers + pager behavior</td></tr>
+    <tr><td>Lane (cook)</td><td><span class="tag new">new</span></td><td>Header + single step card + back/next footer</td></tr>
+    <tr><td>Lane (mise)</td><td><span class="tag new">new</span></td><td>Header + vertical bowl checklist, collapse-on-check</td></tr>
+    <tr><td>Shared lane</td><td><span class="tag new">new</span></td><td>Neutral styling, multi-recipe emojis, cook=stepper / mise=checklist</td></tr>
+    <tr><td>Horizontal snap-scroll + edge hint</td><td><span class="tag new">new</span></td><td>3 lanes per view; fade + chevron when more off-screen</td></tr>
+    <tr><td>Theme / colors / type</td><td><span class="tag keep">keep</span></td><td>No change</td></tr>
+    <tr><td>Recipe drill-down, Summary, Home, Login</td><td><span class="tag keep">keep</span></td><td>No change</td></tr>
+  </table>
+
+  <h2 id="data">Data shape implications</h2>
+  <ul>
+    <li><strong>Shared work is app-generated, NOT authored.</strong> v3 has no <code>sharedWith</code> on steps and no array <code>forRecipeId</code> on bowls — and we are <em>not</em> adding them. Each recipe arrives self-contained; the app derives the Shared lanes from the recipes in the current plan: <strong>mise</strong> by merging bowl ingredients on <code>(ingredientId, unit, preparation)</code>, <strong>cook</strong> by grouping <code>backgroundable</code> steps that share an <code>ingredientId</code>+<code>preparation</code>. This is deliberate — keying off canonical <code>ingredientId</code> lets shared work be computed for <strong>any</strong> recipe set, including custom cross-week plans, with nothing to author per week.</li>
+    <li><strong>Per-recipe cook sequences are already grouped.</strong> Steps live in <code>recipe.cookPhase.steps</code> — no grouping by <code>recipeId</code> needed. A no-cook recipe (chia) has a minimal <code>cookPhase</code> (a single assemble/chill step): render a trivial lane or hide it; it still has Mise bowls.</li>
+    <li><strong>Phase 0 is a per-step flag now.</strong> Long-running kickoffs are the leading steps of each <code>cookPhase</code>, marked <code>cookStep.backgroundable=true</code> (with a <code>timer</code>). The app surfaces them first; cross-recipe ones (e.g. rice) fall out of the shared-cook derivation above. No distinct phase, nothing on the Schedule tab.</li>
+    <li><strong>Ingredient ids must be canonical.</strong> The cross-recipe (and cross-week) mise merge keys on <code>ingredientId</code>, so the same real ingredient uses the same slug on every card (a shared exporter-side vocabulary guarantees this). Composite ids (<code>holy-trinity</code>) won't merge — expect atomic ones.</li>
+    <li><strong>Timer field:</strong> <code>step.timer = {label, durationSeconds}</code> (v3 names it <code>label</code>).</li>
+  </ul>
+
+  <h2 id="open">Behavior notes for the build</h2>
+  <ul>
+    <li><strong>Phase 0 lives in Cook</strong> — long-running kickoff tasks render within the cook lanes (per-recipe or shared), not as a separate phase or on the Schedule tab.</li>
+    <li><strong>Per-phase lane visibility</strong> — independent sets for Mise and Cook (see callout above).</li>
+    <li><strong>Default visible lanes</strong> — show in-progress recipes (≈3) by default; queued/done are one tap away in the bar.</li>
+    <li><strong>Finish clears the lane</strong> — "Done · finish" marks the recipe complete and removes its lane; its chip stays (dimmed + check) to re-open.</li>
+    <li><strong>Collapse on check (mise)</strong> — a checked bowl collapses to number + name; tap again to expand/uncheck.</li>
+    <li><strong>Command bar is the pager</strong> — tapping a chip scrolls its lane into view (use a scroll-to-offset, not <code>scrollIntoView</code> on Android equivalents).</li>
+    <li><strong>Tablet-first</strong> — design targets 3 lanes per view at tablet width; a phone treatment (1 lane at a time, chips as a top selector) is a later pass.</li>
+  </ul>
+
+  <div class="callout">
+    <div class="callout-label">Next</div>
+    See <strong>Cook Redesign — Android Handoff.html</strong> for the Compose-level changes: new composables, state model, navigation, and tests, expressed as a diff against the existing app.
+  </div>
+</div>
+</body>
+</html>

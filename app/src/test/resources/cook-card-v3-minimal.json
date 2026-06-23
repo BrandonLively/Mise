@@ -1,0 +1,167 @@
+{
+  "$schema": "https://example.com/meal-prep-cook-card.v3.schema.json",
+  "schemaVersion": "3.0.0",
+  "meta": {
+    "id": "2026-06-21-caribbean-jerk",
+    "theme": "Caribbean / Jerk",
+    "cookDate": "2026-06-21",
+    "servingsPerMain": 7,
+    "servingsPerDessert": 7,
+    "dailyTarget": { "calories": 2150, "proteinFloorGrams": 100, "leanPreference": "carb-leaning", "tolerancePercent": 5 },
+    "generation": { "skill": "recipe-json-exporter", "skillVersion": "3.0", "sourceCookCardFile": "meal-prep-2026-06-21-caribbean-jerk.md" }
+  },
+
+  "recipes": [
+    {
+      "id": "jerk-chicken-rice-peas",
+      "name": "Jerk Chicken Thighs over Rice & Peas",
+      "type": "main",
+      "emoji": "🍗",
+      "color": "RED",
+      "description": "Overnight-jerk-marinated thighs air-fried to charred edges, over coconut rice & peas.",
+      "source": { "author": "Serious Eats + The Kitchn", "url": "https://www.seriouseats.com/jerk-chicken-recipe" },
+      "yield": { "servings": 7, "containerSize": "720 mL / 3-cup", "perServingContainerNote": "Single-compartment; lime wedge for finishing." },
+      "perServing": { "calories": 560, "proteinGrams": 42, "carbsGrams": 51, "fatGrams": 19 },
+      "timing": { "activeMinutes": 25, "totalMinutes": 50, "keeps": "all week (smell test)" },
+      "equipment": ["Air fryer (400°F)", "Saucepan or rice cooker"],
+      "assembleAndStore": ["Per container: ~200g rice & peas → ~135g sliced chicken → lime wedge", "Cool 15 min uncovered, seal, refrigerate."],
+
+      "prepSchedule": [
+        { "offset": "night-before", "label": "Jerk marinade", "tasks": ["Blend the jerk marinade; coat both chicken trays; fridge 24–44 hr."], "combinable": false, "rationale": "Jerk rewards a long marinade." }
+      ],
+
+      "misePhase": {
+        "durationMinutes": 15,
+        "bowls": [
+          {
+            "id": "a-b1", "name": "Jerk finishing",
+            "ingredients": [
+              { "ingredientId": "allspice", "name": "ground allspice", "quantity": 2, "unit": "tsp", "preparation": null, "combinable": true },
+              { "ingredientId": "lime", "name": "lime", "quantity": 1, "unit": "each", "preparation": "juiced", "combinable": true },
+              { "ingredientId": "salt", "name": "salt", "quantity": null, "unit": "pinch", "preparation": null, "combinable": false }
+            ],
+            "steps": ["Combine; squeeze over the chicken after air-frying."]
+          }
+        ],
+        "standalones": [
+          { "name": "Jerk-marinated chicken", "ingredientId": "chicken-thigh", "prep": ["From last night's marinade; pat off excess before air-frying."] }
+        ]
+      },
+
+      "cookPhase": {
+        "durationMinutes": 35,
+        "steps": [
+          {
+            "id": "a-c1", "backgroundable": true,
+            "steps": ["Rice & peas: simmer coconut milk + drained beans + aromatics, stir in the rinsed rice, cover 18 min + 10 rest. Start this first, then move on while it cooks."],
+            "ingredients": [
+              { "ingredientId": "white-rice", "name": "white rice", "quantity": "340", "unit": "g", "preparation": "dry, rinsed" },
+              { "ingredientId": "kidney-beans", "name": "kidney beans", "quantity": "1", "unit": "can", "preparation": "drained" }
+            ],
+            "timer": { "label": "Rice & peas", "durationSeconds": 1680, "durationDescription": "18 min + 10 rest" }
+          },
+          {
+            "id": "a-c2",
+            "steps": ["Air-fry chicken 400°F · 16–18 min, flip at 8."],
+            "timer": { "label": "Air-fry chicken", "durationSeconds": 1020, "durationDescription": "16–18 min" },
+            "handsOff": ["rice & peas resting"]
+          },
+          {
+            "id": "a-c3",
+            "steps": ["Slice chicken; portion 7× (rice & peas ~200g + chicken ~135g + lime wedge)."],
+            "handsOff": [], "isFinalStep": true
+          }
+        ]
+      },
+
+      "macroBreakdown": {
+        "ingredients": [
+          { "name": "Chicken thigh, free-range, cooked", "ingredientId": "chicken-thigh", "quantity": 135, "unit": "g", "displayHint": "from ~190g raw", "calories": 280, "proteinGrams": 35, "carbsGrams": 0, "fatGrams": 14.5 },
+          { "name": "Rice & peas (rice + beans + coconut)", "ingredientId": "rice-and-peas", "quantity": 200, "unit": "g", "calories": 280, "proteinGrams": 7, "carbsGrams": 51, "fatGrams": 4.5 }
+        ]
+      },
+
+      "reheat": { "method": "Microwave covered", "timeSeconds": 90, "extraSteps": ["Fresh lime at the table."] }
+    },
+
+    {
+      "id": "jerk-salmon-mango-salsa",
+      "name": "Jerk-Spiced Salmon with Mango Salsa + Rice",
+      "type": "main",
+      "emoji": "🐟",
+      "color": "BLUE",
+      "description": "Dry-jerk-rubbed salmon, air-fried, with a bright mango salsa over white rice.",
+      "source": { "author": "The Mediterranean Dish", "url": "https://www.themediterraneandish.com/" },
+      "yield": { "servings": 7, "containerSize": "720 mL / 3-cup", "perServingContainerNote": "Salsa in a separate cup; eat earlier in the week." },
+      "perServing": { "calories": 520, "proteinGrams": 35, "carbsGrams": 50, "fatGrams": 20 },
+      "timing": { "activeMinutes": 20, "totalMinutes": 30, "keeps": "all week; salmon best by day 4–5" },
+      "equipment": ["Air fryer (or 425°F oven)"],
+      "assembleAndStore": ["Per container: ~120g rice → 1 salmon portion; ~70g salsa in a separate cup."],
+
+      "prepSchedule": [
+        { "offset": "T-36h", "label": "Thaw salmon", "tasks": ["Move frozen salmon to the fridge to thaw (~36 hr)."], "combinable": false }
+      ],
+
+      "misePhase": {
+        "durationMinutes": 10,
+        "bowls": [
+          {
+            "id": "b-b1", "name": "Mango salsa",
+            "ingredients": [
+              { "ingredientId": "mango", "name": "mango", "quantity": 2, "unit": "each", "preparation": "diced", "combinable": true },
+              { "ingredientId": "red-onion", "name": "red onion", "quantity": 0.5, "unit": "each", "preparation": "fine-diced", "combinable": true },
+              { "ingredientId": "lime", "name": "lime", "quantity": 1, "unit": "each", "preparation": "juiced", "combinable": true },
+              { "ingredientId": "cilantro", "name": "cilantro", "quantity": 20, "unit": "g", "preparation": "chopped", "combinable": true }
+            ],
+            "steps": ["Combine; cover and refrigerate to meld."]
+          },
+          {
+            "id": "b-b2", "name": "Dry jerk rub",
+            "ingredients": [
+              { "ingredientId": "allspice", "name": "ground allspice", "quantity": 2, "unit": "tsp", "preparation": null, "combinable": true },
+              { "ingredientId": "cayenne", "name": "cayenne", "quantity": 0.5, "unit": "tsp", "preparation": null, "combinable": true }
+            ],
+            "steps": ["Combine; rub onto the salmon at cook time."]
+          }
+        ],
+        "standalones": [
+          { "name": "Salmon portions", "ingredientId": "salmon", "prep": ["Thawed from the fridge; pat dry."] }
+        ]
+      },
+
+      "cookPhase": {
+        "durationMinutes": 25,
+        "steps": [
+          {
+            "id": "b-c1", "backgroundable": true,
+            "steps": ["Rinse and start the white rice (rice cooker, white-rice setting). Start this first, then move on while it cooks."],
+            "ingredients": [{ "ingredientId": "white-rice", "name": "white rice", "quantity": "280", "unit": "g", "preparation": "dry, rinsed" }],
+            "timer": { "label": "White rice", "durationSeconds": 1500, "durationDescription": "~25 min" }
+          },
+          {
+            "id": "b-c2",
+            "steps": ["Rub salmon with the dry jerk; air-fry 400°F · 8–9 min, no flip."],
+            "timer": { "label": "Air-fry salmon", "durationSeconds": 510, "durationDescription": "8–9 min" }
+          },
+          {
+            "id": "b-c3",
+            "steps": ["Portion 7× (rice ~120g + salmon); salsa ~70g into 7 separate cups."],
+            "handsOff": [], "isFinalStep": true
+          }
+        ]
+      },
+
+      "macroBreakdown": {
+        "ingredients": [
+          { "name": "Atlantic salmon, cooked", "ingredientId": "salmon", "quantity": 136, "unit": "g", "displayHint": "from ~195g raw", "calories": 288, "proteinGrams": 31, "carbsGrams": 0, "fatGrams": 17.4 },
+          { "name": "White rice, cooked", "ingredientId": "white-rice", "quantity": 120, "unit": "g", "calories": 156, "proteinGrams": 3, "carbsGrams": 34, "fatGrams": 0.3 },
+          { "name": "Mango salsa", "ingredientId": "mango-salsa", "quantity": 70, "unit": "g", "calories": 50, "proteinGrams": 0.6, "carbsGrams": 13, "fatGrams": 0.2 },
+          { "name": "Olive oil + dry jerk rub", "ingredientId": "olive-oil", "quantity": null, "unit": null, "displayHint": "air-fryer share", "calories": 26, "proteinGrams": 0.4, "carbsGrams": 3, "fatGrams": 2.1 }
+        ]
+      },
+
+      "reheat": { "method": "Microwave 60–75 sec GENTLE", "timeSeconds": 70, "extraSteps": ["Salsa stays cold — spoon on after reheating."] },
+      "deviationsFromPlan": ["Farmed Atlantic salmon is ~6g fat/serving more than the wild sockeye originally modeled — absorbed within tolerance."]
+    }
+  ]
+}

@@ -11,7 +11,10 @@ import com.patchfox.mise.data.cookcard.CookCardRepository
 import com.patchfox.mise.data.cookcard.CookCardRepositoryImpl
 import com.patchfox.mise.data.cookcard.CookCardSource
 import com.patchfox.mise.data.cookcard.FirestoreCookCardSource
+import com.patchfox.mise.data.local.CompletedRecipeDao
 import com.patchfox.mise.data.local.CookCardDao
+import com.patchfox.mise.data.local.CookStepIndexDao
+import com.patchfox.mise.data.local.LaneVisibilityDao
 import com.patchfox.mise.data.local.DaysDivisorDao
 import com.patchfox.mise.data.local.MiseCheckDao
 import com.patchfox.mise.data.local.MiseDatabase
@@ -63,6 +66,9 @@ object DataProvidesModule {
     @Provides fun provideSummaryInputDao(db: MiseDatabase): SummaryInputDao = db.summaryInputDao()
     @Provides fun provideDaysDivisorDao(db: MiseDatabase): DaysDivisorDao = db.daysDivisorDao()
     @Provides fun providePendingAlarmDao(db: MiseDatabase): PendingAlarmDao = db.pendingAlarmDao()
+    @Provides fun provideLaneVisibilityDao(db: MiseDatabase): LaneVisibilityDao = db.laneVisibilityDao()
+    @Provides fun provideCookStepIndexDao(db: MiseDatabase): CookStepIndexDao = db.cookStepIndexDao()
+    @Provides fun provideCompletedRecipeDao(db: MiseDatabase): CompletedRecipeDao = db.completedRecipeDao()
 
     @Provides
     @Singleton

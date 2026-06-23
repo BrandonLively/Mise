@@ -12,9 +12,12 @@ import androidx.room.RoomDatabase
         StartedTimerEntity::class,
         SummaryInputEntity::class,
         DaysDivisorEntity::class,
+        LaneVisibilityEntity::class,
+        CookStepIndexEntity::class,
+        CompletedRecipeEntity::class,
         PendingAlarmEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class MiseDatabase : RoomDatabase() {
@@ -25,5 +28,8 @@ abstract class MiseDatabase : RoomDatabase() {
     abstract fun startedTimerDao(): StartedTimerDao
     abstract fun summaryInputDao(): SummaryInputDao
     abstract fun daysDivisorDao(): DaysDivisorDao
+    abstract fun laneVisibilityDao(): LaneVisibilityDao
+    abstract fun cookStepIndexDao(): CookStepIndexDao
+    abstract fun completedRecipeDao(): CompletedRecipeDao
     abstract fun pendingAlarmDao(): PendingAlarmDao
 }

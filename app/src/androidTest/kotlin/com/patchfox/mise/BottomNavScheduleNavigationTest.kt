@@ -11,7 +11,6 @@ import com.patchfox.mise.ui.nav.HomeRoute
 import com.patchfox.mise.ui.nav.MiseDestination
 import com.patchfox.mise.ui.nav.RecipeDetailRoute
 import com.patchfox.mise.ui.nav.RecipesRoute
-import com.patchfox.mise.ui.nav.SummaryRoute
 import com.patchfox.mise.ui.navigateTopLevel
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -39,7 +38,6 @@ class BottomNavScheduleNavigationTest {
                 graph = createGraph(startDestination = HomeRoute) {
                     composable<HomeRoute> {}
                     composable<CookRoute> {}
-                    composable<SummaryRoute> {}
                     composable<RecipesRoute> {}
                     composable<RecipeDetailRoute> {}
                 }
@@ -61,7 +59,6 @@ class BottomNavScheduleNavigationTest {
                 route == null -> null
                 route.startsWith(HomeRoute::class.qualifiedName!!) -> MiseDestination.Home
                 route.startsWith(CookRoute::class.qualifiedName!!) -> MiseDestination.Cook
-                route.startsWith(SummaryRoute::class.qualifiedName!!) -> MiseDestination.Summary
                 route.startsWith(RecipesRoute::class.qualifiedName!!) -> MiseDestination.Recipes
                 else -> null
             }
@@ -101,7 +98,7 @@ class BottomNavScheduleNavigationTest {
         nav.tapTab(MiseDestination.Home)
         nav.tapTab(MiseDestination.Recipes)
         nav.tapTab(MiseDestination.Home)
-        nav.tapTab(MiseDestination.Summary)
+        nav.tapTab(MiseDestination.Cook)
         nav.tapTab(MiseDestination.Home)
         assertEquals(MiseDestination.Home, nav.currentTab())
     }
@@ -128,7 +125,7 @@ class BottomNavScheduleNavigationTest {
         val nav = newNavController()
 
         instrumentation.runOnMainSync {
-            nav.navigate(CookRoute(initialPhase = "Phase1"))
+            nav.navigate(CookRoute(initialPhase = "COOK"))
         }
         assertEquals(MiseDestination.Cook, nav.currentTab())
 
