@@ -29,7 +29,9 @@ import com.patchfox.mise.domain.model.CookCard
 import com.patchfox.mise.domain.model.PrepTaskId
 import com.patchfox.mise.domain.model.Recipe
 import com.patchfox.mise.domain.model.RecipeId
+import com.patchfox.mise.domain.model.combinedMacros
 import com.patchfox.mise.domain.model.totalActiveMinutes
+import com.patchfox.mise.ui.component.DailyMacrosCard
 import com.patchfox.mise.ui.component.HeroCookDayCard
 import com.patchfox.mise.ui.component.HeroCookDayStats
 import com.patchfox.mise.ui.component.MiseCard
@@ -81,6 +83,10 @@ fun HomePhone(
                 ),
                 onCta = onWalkPlan,
             )
+            Spacer(Modifier.height(22.dp))
+        }
+        item {
+            DailyMacrosCard(card.combinedMacros())
             Spacer(Modifier.height(22.dp))
         }
         item {

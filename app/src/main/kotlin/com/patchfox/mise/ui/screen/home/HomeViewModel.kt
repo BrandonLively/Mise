@@ -10,15 +10,18 @@ import com.patchfox.mise.domain.usecase.GetCurrentCookCardUseCase
 import com.patchfox.mise.domain.usecase.ParsePrepTasksUseCase
 import com.patchfox.mise.domain.usecase.PrepTask
 import com.patchfox.mise.domain.usecase.RefreshCookCardUseCase
+import com.patchfox.mise.reminder.PrepReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -36,7 +39,21 @@ class HomeViewModel @Inject constructor(
     private val refresh: RefreshCookCardUseCase,
     private val parsePrep: ParsePrepTasksUseCase,
     private val prepCheck: PrepCheckRepository,
+    private val prepReminders: PrepReminderScheduler,
 ) : ViewModel() {
+
+    init {
+        // (Re)schedule do-ahead prep reminders whenever the current card changes.
+        viewModelScope.launch {
+            getCard()
+                .mapNotNull {
+                    (it as? CookCardLoadState.Success)?.card
+                        ?: (it as? CookCardLoadState.Error)?.cached
+                }
+                .distinctUntilChangedBy { it.id.value }
+                .collect { prepReminders.schedule(it) }
+        }
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val state: StateFlow<HomeUiState> = getCard()

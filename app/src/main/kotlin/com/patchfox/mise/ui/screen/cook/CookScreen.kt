@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.patchfox.mise.ui.state.CookStage
 import com.patchfox.mise.ui.window.WindowSize
@@ -27,6 +28,13 @@ fun CookScreen(
     DisposableEffect(Unit) {
         viewModel.setCookScreenVisible(true)
         onDispose { viewModel.setCookScreenVisible(false) }
+    }
+
+    // Keep the screen awake while actively cooking (COOK stage) — hands are busy.
+    val view = LocalView.current
+    DisposableEffect(state.stage) {
+        view.keepScreenOn = state.stage == CookStage.COOK
+        onDispose { view.keepScreenOn = false }
     }
 
     LaunchedEffect(initialStage) {

@@ -65,6 +65,17 @@
         ],
         "method": "Microwave covered; fresh lime after"
       },
+      "prepSchedule": [
+        {
+          "offset": "T-44h",
+          "label": "Friday night",
+          "tasks": [
+            "Jerk-marinate chicken: blend ~½ the jerk marinade (4 scallions, 1 habanero seeded for medium / seeds-in for hot, 2 tsp jarred garlic, 1 Tbsp grated ginger, 2 tsp allspice, 1 tsp thyme, ½ tsp cinnamon, ¼ tsp nutmeg, 2 Tbsp soy sauce, 1 Tbsp brown sugar, juice of 1 lime, 2 Tbsp olive oil, 1 tsp salt, ½ tsp pepper). Massage into both Perdue trays. Fridge 24-44 hr."
+          ],
+          "combinable": false,
+          "rationale": "Jerk rewards a long marinade. No bean soak needed — beans are canned."
+        }
+      ],
       "macroBreakdown": {
         "ingredients": [
           {
@@ -134,7 +145,7 @@
       "misePhase": {
         "bowls": [
           {
-            "id": "bowl-6-rice-peas",
+            "id": "jerk-chicken-rice-peas-b1",
             "name": "Rice & Peas Pot (if not started in Phase 0)",
             "ingredients": [
               {
@@ -232,7 +243,7 @@
       "cookPhase": {
         "steps": [
           {
-            "id": "p0-step-2",
+            "id": "jerk-chicken-rice-peas-s1",
             "backgroundable": true,
             "steps": [
               "Start rice & peas: bring the coconut-milk-bean pot to a simmer, stir in rinsed rice, cover, low 18 min + 10 min rest:"
@@ -278,7 +289,7 @@
             }
           },
           {
-            "id": "p2-step-001",
+            "id": "jerk-chicken-rice-peas-s2",
             "steps": [
               "Air fryer ON 400°F, 3 min preheat."
             ],
@@ -288,7 +299,7 @@
             ]
           },
           {
-            "id": "p2-step-002",
+            "id": "jerk-chicken-rice-peas-s3",
             "steps": [
               "Jerk chicken batch 1 into air fryer (drip excess marinade). 400°F · 16-18 min, flip at 8."
             ],
@@ -313,7 +324,7 @@
             ]
           },
           {
-            "id": "p2-step-004",
+            "id": "jerk-chicken-rice-peas-s4",
             "steps": [
               "Chicken batch 1 out, rest. Batch 2 in (same settings)."
             ],
@@ -329,7 +340,7 @@
             ]
           },
           {
-            "id": "p2-step-006",
+            "id": "jerk-chicken-rice-peas-s5",
             "steps": [
               "Slice rested jerk chicken into strips. Squeeze lime."
             ],
@@ -340,7 +351,7 @@
             ]
           },
           {
-            "id": "p2-step-009",
+            "id": "jerk-chicken-rice-peas-s6",
             "steps": [
               "Portion R1 into 7 single-compartment containers, each:"
             ],
@@ -422,6 +433,17 @@
         ],
         "method": "Microwave salmon + rice 60-75 sec GENTLE; mango salsa cold on top after"
       },
+      "prepSchedule": [
+        {
+          "offset": "T-36h",
+          "label": "Friday night",
+          "tasks": [
+            "Move salmon to the fridge to thaw (~36 hr to Sunday)."
+          ],
+          "combinable": false,
+          "rationale": "Jerk rewards a long marinade. No bean soak needed — beans are canned."
+        }
+      ],
       "macroBreakdown": {
         "ingredients": [
           {
@@ -481,7 +503,7 @@
       "misePhase": {
         "bowls": [
           {
-            "id": "bowl-1-mango-salsa",
+            "id": "jerk-salmon-mango-salsa-b1",
             "name": "Mango Salsa",
             "ingredients": [
               {
@@ -538,7 +560,7 @@
             ]
           },
           {
-            "id": "bowl-2-jerk-spice",
+            "id": "jerk-salmon-mango-salsa-b2",
             "name": "Dry Jerk Spice (salmon)",
             "ingredients": [
               {
@@ -644,7 +666,7 @@
       "cookPhase": {
         "steps": [
           {
-            "id": "p0-step-1",
+            "id": "jerk-salmon-mango-salsa-s1",
             "backgroundable": true,
             "steps": [
               "Rinse and start in the rice cooker (white-rice setting, ~25 min) for R2 + R3 sides:"
@@ -682,7 +704,7 @@
             }
           },
           {
-            "id": "p0-step-3",
+            "id": "jerk-salmon-mango-salsa-s2",
             "backgroundable": true,
             "steps": [
               "Lay thawed salmon on a paper-towel tray to surface-dry (better jerk crust)"
@@ -694,7 +716,7 @@
             }
           },
           {
-            "id": "p2-step-005",
+            "id": "jerk-salmon-mango-salsa-s3",
             "steps": [
               "Chicken batch 2 out, rest. Salmon in: rub with Bowl 2 jerk spice, 400°F · 8-9 min no flip."
             ],
@@ -720,7 +742,7 @@
             ]
           },
           {
-            "id": "p2-step-011",
+            "id": "jerk-salmon-mango-salsa-s4",
             "steps": [
               "Portion R2 into 7 deep-round containers, each:",
               "Mango salsa (~70g) into 7 separate small cups (added at eating time)"
@@ -866,7 +888,7 @@
       "misePhase": {
         "bowls": [
           {
-            "id": "bowl-3-stew-veg",
+            "id": "caribbean-bean-sweet-potato-stew-b1",
             "name": "Stew Veg",
             "ingredients": [
               {
@@ -915,7 +937,7 @@
             ]
           },
           {
-            "id": "bowl-4-stew-spice",
+            "id": "caribbean-bean-sweet-potato-stew-b2",
             "name": "Stew Spice",
             "ingredients": [
               {
@@ -972,7 +994,7 @@
             ]
           },
           {
-            "id": "bowl-5-sweet-potato",
+            "id": "caribbean-bean-sweet-potato-stew-b3",
             "name": "Sweet Potato Cubes",
             "ingredients": [
               {
@@ -1002,7 +1024,7 @@
       "cookPhase": {
         "steps": [
           {
-            "id": "p0-step-1",
+            "id": "caribbean-bean-sweet-potato-stew-s1",
             "backgroundable": true,
             "steps": [
               "Rinse and start in the rice cooker (white-rice setting, ~25 min) for R2 + R3 sides:"
@@ -1040,7 +1062,7 @@
             }
           },
           {
-            "id": "p2-step-003",
+            "id": "caribbean-bean-sweet-potato-stew-s2",
             "steps": [
               "Start stew: 1 Tbsp oil, Bowl 3 veg 5 min. Add Bowl 4 spice 30 sec. Add 2 cans beans + Bowl 5 sweet potato + 1 can coconut milk + veg broth carton. Simmer low 25-30 min."
             ],
@@ -1057,14 +1079,14 @@
             ]
           },
           {
-            "id": "p2-step-007",
+            "id": "caribbean-bean-sweet-potato-stew-s3",
             "steps": [
               "Salmon out. Stew fork-tender — mash a few sweet potato cubes to thicken, squeeze lime, off heat."
             ],
             "clockTime": "1:42"
           },
           {
-            "id": "p2-step-010",
+            "id": "caribbean-bean-sweet-potato-stew-s4",
             "steps": [
               "Portion R3 into 7 deep-round containers, each:"
             ],
@@ -1215,7 +1237,7 @@
       "misePhase": {
         "bowls": [
           {
-            "id": "bowl-7-pudding",
+            "id": "coconut-rice-pudding-b1",
             "name": "Pudding Pot",
             "ingredients": [
               {
@@ -1301,7 +1323,7 @@
       "cookPhase": {
         "steps": [
           {
-            "id": "p2-step-008",
+            "id": "coconut-rice-pudding-s1",
             "steps": [
               "Pudding: Bowl 7 pot over medium-low, stir often, 20-25 min to creamy (pull while loose)."
             ],
@@ -1317,7 +1339,7 @@
             ]
           },
           {
-            "id": "p2-step-012",
+            "id": "coconut-rice-pudding-s2",
             "steps": [
               "Pudding done — off heat, stir in 1 tsp vanilla, divide into 7 jars (~190g), wrap-press, counter-cool."
             ],

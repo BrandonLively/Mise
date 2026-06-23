@@ -34,7 +34,7 @@
         "durationMinutes": 15,
         "bowls": [
           {
-            "id": "a-b1", "name": "Jerk finishing",
+            "id": "jerk-chicken-rice-peas-b1", "name": "Jerk finishing",
             "ingredients": [
               { "ingredientId": "allspice", "name": "ground allspice", "quantity": 2, "unit": "tsp", "preparation": null, "combinable": true },
               { "ingredientId": "lime", "name": "lime", "quantity": 1, "unit": "each", "preparation": "juiced", "combinable": true },
@@ -52,7 +52,7 @@
         "durationMinutes": 35,
         "steps": [
           {
-            "id": "a-c1", "backgroundable": true,
+            "id": "jerk-chicken-rice-peas-s1", "backgroundable": true,
             "steps": ["Rice & peas: simmer coconut milk + drained beans + aromatics, stir in the rinsed rice, cover 18 min + 10 rest. Start this first, then move on while it cooks."],
             "ingredients": [
               { "ingredientId": "white-rice", "name": "white rice", "quantity": "340", "unit": "g", "preparation": "dry, rinsed" },
@@ -61,13 +61,13 @@
             "timer": { "label": "Rice & peas", "durationSeconds": 1680, "durationDescription": "18 min + 10 rest" }
           },
           {
-            "id": "a-c2",
+            "id": "jerk-chicken-rice-peas-s2",
             "steps": ["Air-fry chicken 400°F · 16–18 min, flip at 8."],
             "timer": { "label": "Air-fry chicken", "durationSeconds": 1020, "durationDescription": "16–18 min" },
             "handsOff": ["rice & peas resting"]
           },
           {
-            "id": "a-c3",
+            "id": "jerk-chicken-rice-peas-s3",
             "steps": ["Slice chicken; portion 7× (rice & peas ~200g + chicken ~135g + lime wedge)."],
             "handsOff": [], "isFinalStep": true
           }
@@ -106,7 +106,7 @@
         "durationMinutes": 10,
         "bowls": [
           {
-            "id": "b-b1", "name": "Mango salsa",
+            "id": "jerk-salmon-mango-salsa-b1", "name": "Mango salsa",
             "ingredients": [
               { "ingredientId": "mango", "name": "mango", "quantity": 2, "unit": "each", "preparation": "diced", "combinable": true },
               { "ingredientId": "red-onion", "name": "red onion", "quantity": 0.5, "unit": "each", "preparation": "fine-diced", "combinable": true },
@@ -116,7 +116,7 @@
             "steps": ["Combine; cover and refrigerate to meld."]
           },
           {
-            "id": "b-b2", "name": "Dry jerk rub",
+            "id": "jerk-salmon-mango-salsa-b2", "name": "Dry jerk rub",
             "ingredients": [
               { "ingredientId": "allspice", "name": "ground allspice", "quantity": 2, "unit": "tsp", "preparation": null, "combinable": true },
               { "ingredientId": "cayenne", "name": "cayenne", "quantity": 0.5, "unit": "tsp", "preparation": null, "combinable": true }
@@ -133,18 +133,18 @@
         "durationMinutes": 25,
         "steps": [
           {
-            "id": "b-c1", "backgroundable": true,
+            "id": "jerk-salmon-mango-salsa-s1", "backgroundable": true,
             "steps": ["Rinse and start the white rice (rice cooker, white-rice setting). Start this first, then move on while it cooks."],
             "ingredients": [{ "ingredientId": "white-rice", "name": "white rice", "quantity": "280", "unit": "g", "preparation": "dry, rinsed" }],
             "timer": { "label": "White rice", "durationSeconds": 1500, "durationDescription": "~25 min" }
           },
           {
-            "id": "b-c2",
+            "id": "jerk-salmon-mango-salsa-s2",
             "steps": ["Rub salmon with the dry jerk; air-fry 400°F · 8–9 min, no flip."],
             "timer": { "label": "Air-fry salmon", "durationSeconds": 510, "durationDescription": "8–9 min" }
           },
           {
-            "id": "b-c3",
+            "id": "jerk-salmon-mango-salsa-s3",
             "steps": ["Portion 7× (rice ~120g + salmon); salsa ~70g into 7 separate cups."],
             "handsOff": [], "isFinalStep": true
           }

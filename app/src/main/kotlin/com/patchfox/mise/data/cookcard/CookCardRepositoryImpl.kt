@@ -74,6 +74,7 @@ class CookCardRepositoryImpl @Inject constructor(
                             syncError.value = error
                         }
                     }
+                    purgeUnmappableCache(user.uid)
                     seedFromBundledAssetIfEmpty(user.uid)
                 } else {
                     Log.d(TAG, "No signed-in user — stopping cook-card sync")
@@ -94,11 +95,10 @@ class CookCardRepositoryImpl @Inject constructor(
                         card != null && err != null -> CookCardLoadState.Error(err, card)
                         card != null -> CookCardLoadState.Success(card)
                         err != null -> CookCardLoadState.Error(err, null)
-                        // A cached row exists but won't map — surface an error
-                        // rather than hanging on the loading spinner forever.
-                        entity != null -> CookCardLoadState.Error(
-                            "Cook card data couldn't be read.", null,
-                        )
+                        // A cached row exists but won't map (e.g. a stale payload from an
+                        // older schema). Treat it as "still loading" rather than a terminal
+                        // error; the bad row is purged on sign-in (purgeUnmappableCache) and
+                        // a fresh Firestore sync (or the bundled seed) replaces it.
                         else -> CookCardLoadState.Loading
                     }
                 }
@@ -127,6 +127,19 @@ class CookCardRepositoryImpl @Inject constructor(
         runCatching { CookCardParser.parse(jsonPayload).toDomain() }
             .onFailure { Log.e(TAG, "Failed to map cached cook card to domain", it) }
             .getOrNull()
+
+    /**
+     * Drop a cached row that no longer maps to the current domain model (e.g. after a
+     * schema change), so it gets re-seeded / re-synced instead of lingering. Without this,
+     * a stale payload would keep the Cook tab on the loading spinner until a fresh doc syncs.
+     */
+    private suspend fun purgeUnmappableCache(uid: String) {
+        val entity = cookCardDao.get(uid) ?: return
+        if (entity.toCookCardOrNull() == null) {
+            Log.w(TAG, "Purging unmappable cached cook card for uid $uid")
+            cookCardDao.deleteForUid(uid)
+        }
+    }
 
     /**
      * On a fresh debug install, seed the cache from the bundled sample JSON so the UI has
