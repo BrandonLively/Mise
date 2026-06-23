@@ -17,8 +17,10 @@ The data shapes the app reads from Firestore (`cookCards` collection). Point the
 - Top level: `meta` + `recipes[]`. **Each recipe is self-contained** — no shared `cookPlan`.
 - `recipe.misePhase = { durationMinutes?, bowls[], standalones[] }`
 - `recipe.cookPhase = { durationMinutes?, steps[] }` — the **first** step(s) are `backgroundable:true` (the old Phase 0).
+- `recipe.prepSchedule[]` — do-ahead reminders (marinade, **thaw**, soak) with RELATIVE offsets (`night-before`, `T-36h`). ⚠️ v3 moved these from the v2 top-level `schedule` to **per-recipe** — so the **Schedule/Home** view now aggregates `recipes[].prepSchedule` instead of reading a top-level `schedule`. This is the one v3 data change *outside* the Cook tab.
 - Every mise/cook ingredient carries a canonical `ingredientId`. **Shared lanes are app-generated**: mise = merge `bowls[].ingredients` on `(ingredientId, unit, preparation)`; cook = group `backgroundable` steps sharing `ingredientId`+`preparation`. There is **no** `sharedWith` / array `forRecipeId` — by design (enables custom cross-week cook plans).
 - `recipe.perServing` = Σ `macroBreakdown.ingredients[]` (derived). Daily totals = Σ recipes' `perServing` (the consumer computes; not stored).
 - Display titles ("Mise" / "Cook") and the per-phase ordinal are **client-side constants** — not in the card.
+- **Bowl + cook-step ids are recipe-namespaced and globally unique within a card** (`{recipeId}-b{n}` / `{recipeId}-s{n}`). So the app can key per-bowl/step state on the id alone — *including a future multi-card custom plan of distinct recipes* — with no composite key needed. (`validate.py` hard-fails any duplicate bowl/step id in a card.)
 
 > The authoritative prose contract is the **cook-card-toolchain consumer contract** (meal-prep skill repo → `cook-card-toolchain/SKILL.md`). Both samples validate against the schema here (0 errors).

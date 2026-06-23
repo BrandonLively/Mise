@@ -51,6 +51,15 @@ class MiseApplication : Application() {
             setSound(null, null)
         }
 
-        nm.createNotificationChannels(listOf(expired, running))
+        val prep = NotificationChannel(
+            TimerChannels.PREP_REMINDER,
+            "Prep reminders",
+            NotificationManager.IMPORTANCE_DEFAULT,
+        ).apply {
+            description = "Reminders for do-ahead prep (marinate, thaw, ripen, etc.)"
+            enableVibration(true)
+        }
+
+        nm.createNotificationChannels(listOf(expired, running, prep))
     }
 }

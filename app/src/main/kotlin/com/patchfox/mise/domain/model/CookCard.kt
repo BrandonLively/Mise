@@ -202,3 +202,25 @@ fun CookCard.dailyTotal(): Macro = recipes.fold(Macro(0.0, 0.0, 0.0, 0.0)) { acc
 fun CookCard.totalActiveMinutes(): Int = recipes.sumOf { r ->
     ((r.misePhase.durationMinutes ?: 0.0) + (r.cookPhase.durationMinutes ?: 0.0))
 }.toInt()
+
+operator fun Macro.plus(other: Macro): Macro = Macro(
+    calories = calories + other.calories,
+    proteinGrams = proteinGrams + other.proteinGrams,
+    carbsGrams = carbsGrams + other.carbsGrams,
+    fatGrams = fatGrams + other.fatGrams,
+)
+
+/**
+ * One serving of this recipe, summed from its per-ingredient [Recipe.macroBreakdown] rows
+ * (falls back to the derived [Recipe.perServing] when the breakdown is absent).
+ */
+fun Recipe.macrosFromBreakdown(): Macro =
+    if (macroBreakdown.isEmpty()) perServing
+    else macroBreakdown.fold(Macro(0.0, 0.0, 0.0, 0.0)) { acc, mi -> acc + mi.macro }
+
+/**
+ * Combined macros for one serving of every recipe in the plan — derived per-recipe
+ * (Σ each recipe's [macrosFromBreakdown]), so it stays correct for any chosen subset.
+ */
+fun CookCard.combinedMacros(): Macro =
+    recipes.fold(Macro(0.0, 0.0, 0.0, 0.0)) { acc, r -> acc + r.macrosFromBreakdown() }

@@ -32,7 +32,9 @@ import com.patchfox.mise.domain.model.CookCard
 import com.patchfox.mise.domain.model.PrepTaskId
 import com.patchfox.mise.domain.model.Recipe
 import com.patchfox.mise.domain.model.RecipeId
+import com.patchfox.mise.domain.model.combinedMacros
 import com.patchfox.mise.domain.model.totalActiveMinutes
+import com.patchfox.mise.ui.component.DailyMacrosCard
 import com.patchfox.mise.ui.component.HeroCookDayCard
 import com.patchfox.mise.ui.component.HeroCookDayStats
 import com.patchfox.mise.ui.component.MiseCard
@@ -103,6 +105,8 @@ fun HomeTablet(
                     ),
                     onCta = onWalkPlan,
                 )
+                Spacer(Modifier.height(28.dp))
+                DailyMacrosCard(card.combinedMacros())
                 Spacer(Modifier.height(28.dp))
                 PrepWorkList(
                     tasks = state.prepTasks,
