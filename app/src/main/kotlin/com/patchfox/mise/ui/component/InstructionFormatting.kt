@@ -1,6 +1,6 @@
 package com.patchfox.mise.ui.component
 
-import com.patchfox.mise.domain.model.InstructionIngredient
+import com.patchfox.mise.domain.model.Ingredient
 
 /**
  * Units that join their quantity with no space — abbreviated weight/volume.
@@ -9,17 +9,20 @@ import com.patchfox.mise.domain.model.InstructionIngredient
 private val NO_SPACE_UNITS = setOf("g", "kg", "mg", "ml", "l", "oz", "lb", "fl oz")
 
 /**
- * Renders one [InstructionIngredient] using the recipe-card convention:
+ * Renders one v3 [Ingredient] using the recipe-card convention:
  * `{quantity}{join}{unit} {name}, {preparation}`.
  *
- * Edge cases (see cook-card v2 handoff doc):
- * - `quantity:null, unit:"pinch"` → `"pinch salt"` (unit alone is the measurement)
- * - `quantity:"4", unit:null` → `"4 eggs"` (whole count, no measurement type)
- * - `quantity:null, unit:null` → `"black pepper"` (preparation carries any modifier)
+ * Uses [Ingredient.quantityDisplay] (the human form — "1 can", "½ tsp", "~250g", "2")
+ * so non-numeric authored amounts render verbatim.
+ *
+ * Edge cases:
+ * - `quantityDisplay:null, unit:"pinch"` → `"pinch salt"` (unit alone is the measurement)
+ * - `quantityDisplay:"4", unit:null` → `"4 eggs"` (whole count, no measurement type)
+ * - `quantityDisplay:null, unit:null` → `"black pepper"` (preparation carries any modifier)
  * - `preparation:"to taste"` → suffixed as `", to taste"`
  */
-fun formatIngredient(ingredient: InstructionIngredient): String {
-    val measurement = buildMeasurement(ingredient.quantity, ingredient.unit)
+fun formatIngredient(ingredient: Ingredient): String {
+    val measurement = buildMeasurement(ingredient.quantityDisplay, ingredient.unit)
     val head = if (measurement.isEmpty()) ingredient.name else "$measurement ${ingredient.name}"
     val prep = ingredient.preparation?.takeIf { it.isNotBlank() }
     return if (prep != null) "$head, $prep" else head

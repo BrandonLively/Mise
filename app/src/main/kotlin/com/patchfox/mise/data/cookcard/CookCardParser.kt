@@ -1,6 +1,6 @@
 package com.patchfox.mise.data.cookcard
 
-import com.patchfox.mise.data.dto.CookCardDto
+import com.patchfox.mise.data.dto.CookCardV3Dto
 import kotlinx.serialization.json.Json
 
 object CookCardParser {
@@ -13,5 +13,6 @@ object CookCardParser {
         encodeDefaults = true
     }
 
-    fun parse(jsonPayload: String): CookCardDto = json.decodeFromString(CookCardDto.serializer(), jsonPayload)
+    fun parse(jsonPayload: String): CookCardV3Dto =
+        json.decodeFromString(CookCardV3Dto.serializer(), jsonPayload)
 }

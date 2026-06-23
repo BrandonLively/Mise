@@ -6,13 +6,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import com.patchfox.mise.ui.component.PhaseTab
 import com.patchfox.mise.ui.screen.cook.CookScreen
 import com.patchfox.mise.ui.screen.home.HomeScreen
 import com.patchfox.mise.ui.screen.recipe.RecipeDetailScreen
 import com.patchfox.mise.ui.screen.recipe.RecipeInstructionsScreen
 import com.patchfox.mise.ui.screen.recipe.RecipesScreen
-import com.patchfox.mise.ui.screen.summary.SummaryScreen
+import com.patchfox.mise.ui.state.CookStage
 import com.patchfox.mise.ui.window.WindowSize
 
 /**
@@ -34,9 +33,9 @@ fun MiseNavHost(
         composable<HomeRoute> {
             HomeScreen(
                 windowSize = windowSize,
-                onWalkPlan = { navController.navigate(CookRoute(initialPhase = PhaseTab.Phase0.name)) },
-                onOpenPhase = { phase ->
-                    navController.navigate(CookRoute(initialPhase = phase.name))
+                onWalkPlan = { navController.navigate(CookRoute(initialPhase = CookStage.COOK.name)) },
+                onOpenStage = { stage ->
+                    navController.navigate(CookRoute(initialPhase = stage.name))
                 },
                 onOpenRecipe = { id -> navController.navigate(RecipeDetailRoute(id.value)) },
             )
@@ -46,14 +45,10 @@ fun MiseNavHost(
             CookScreen(
                 windowSize = windowSize,
                 initialStepId = route.initialStepId,
-                initialPhase = route.initialPhase?.let { name ->
-                    runCatching { PhaseTab.valueOf(name) }.getOrNull()
+                initialStage = route.initialPhase?.let { name ->
+                    runCatching { CookStage.valueOf(name) }.getOrNull()
                 },
-                onViewSummary = { navController.navigate(SummaryRoute) },
             )
-        }
-        composable<SummaryRoute> {
-            SummaryScreen(windowSize = windowSize)
         }
         composable<RecipesRoute> {
             RecipesScreen(

@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/meal-prep-cook-card.v3.schema.json",
+  "title": "Meal-prep cook card (v3 — self-contained recipes)",
+  "description": "v3.0.0. Each Recipe is FULLY SELF-CONTAINED: its own two-phase cook plan, per-ingredient macro breakdown, reheat, and a RELATIVE prep schedule all live inside it — so any recipe (including one pulled from a past week) renders and re-cooks in isolation. The two phases are NAMED OBJECTS, not a list: `misePhase` (bowls + standalones — do-ahead prep, frequently done the day before) and `cookPhase` (an ordered steps[] whose backgroundable kickoff step(s) lead, so the app surfaces the long hands-off task first and the user can start it and move on while it runs). 'Background' is now a per-step flag (CookStep.backgroundable), NOT a phase — the old Phase-0/1/2 array collapsed to these two named phases. There is NO author-time shared-mise consolidation: every ingredient carries a CANONICAL IDENTITY (ingredientId + canonical unit + preparation + combinable) so the CLIENT combines overlapping MISE across an arbitrary user-selected set of recipes at cook time (or in one day-before chopping pass). One unified Ingredient shape is used by both mise bowls and cook steps. Removed/relocated from v2: cookPlan wrapper + phases array + Phase-0/1/2 ordinals, containerMath, reheatReference, macroReconciliation, top-level schedule, shared-mise consolidation (sharedMise/isShared/sharedId), weekOverview, leftovers, substitutions, week-shopping logistics (pickupDate/firstMealDate/household), and per-step/bowl ordinal numbers (array position is the order). Top level is just meta + recipes[]. Daily macro totals are DERIVED by the consumer (Σ recipes' perServing); recipe.perServing is itself the Σ of its macroBreakdown rows.",
+  "version": "3.0.0",
+  "type": "object",
+  "required": ["schemaVersion", "meta", "recipes"],
+  "additionalProperties": true,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "type": "string", "pattern": "^3\\.\\d+\\.\\d+$" },
+    "uploadedAt": { "description": "Server-resolved Firestore timestamp injected by upload.py; absent in on-disk JSON." },
+    "meta": { "$ref": "#/$defs/Meta" },
+    "recipes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Recipe" } }
+  },
+  "$defs": {
+    "Macro": {
+      "type": "object",
+      "required": ["calories", "proteinGrams", "carbsGrams", "fatGrams"],
+      "properties": {
+        "calories": { "type": "number", "minimum": 0 },
+        "proteinGrams": { "type": "number", "minimum": 0 },
+        "carbsGrams": { "type": "number", "minimum": 0 },
+        "fatGrams": { "type": "number", "minimum": 0 }
+      },
+      "$comment": "No additionalProperties:false — base of allOf extensions (macro rows add name/amount)."
+    },
+
+    "Meta": {
+      "type": "object",
+      "required": ["id", "theme", "cookDate", "servingsPerMain", "dailyTarget"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "theme": { "type": "string" },
+        "cookDate": { "type": "string", "format": "date", "description": "Historical anchor — the week this card was authored for. A re-cook of a single recipe schedules its own prep from Recipe.prepSchedule relative offsets." },
+        "servingsPerMain": { "type": "integer", "minimum": 1 },
+        "servingsPerDessert": { "type": "integer", "minimum": 1 },
+        "dailyTarget": {
+          "type": "object",
+          "required": ["calories", "proteinFloorGrams"],
+          "properties": {
+            "calories": { "type": "number", "minimum": 0 },
+            "proteinFloorGrams": { "type": "number", "minimum": 0 },
+            "leanPreference": { "type": "string" },
+            "tolerancePercent": { "type": "number", "minimum": 0 }
+          }
+        },
+        "generation": { "type": "object", "additionalProperties": true }
+      }
+    },
+
+    "Source": {
+      "type": "object",
+      "properties": { "author": { "type": "string" }, "url": { "type": "string" } }
+    },
+
+    "Recipe": {
+      "type": "object",
+      "required": ["id", "name", "type", "perServing", "macroBreakdown", "cookPhase", "reheat"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["main", "dessert"] },
+        "emoji": { "type": "string", "description": "Self-contained on the recipe (no top-level emojiLegend in v3)." },
+        "color": { "type": "string", "enum": ["BLUE", "GREEN", "PURPLE", "YELLOW", "RED"] },
+        "description": { "type": "string" },
+        "source": { "$ref": "#/$defs/Source" },
+        "yield": {
+          "type": "object",
+          "properties": {
+            "servings": { "type": "integer", "minimum": 1 },
+            "containerSize": { "type": "string" },
+            "perServingContainerNote": { "type": "string" }
+          }
+        },
+        "perServing": {
+          "allOf": [{ "$ref": "#/$defs/Macro" }],
+          "description": "DERIVED = exact sum of macroBreakdown.ingredients[] rows. derive.py sets it; never hand-authored."
+        },
+        "timing": {
+          "type": "object",
+          "properties": {
+            "activeMinutes": { "type": "number", "minimum": 0, "description": "The single home for active cook minutes (no duplicate on the phases)." },
+            "totalMinutes": { "anyOf": [{ "type": "number" }, { "type": "string" }] },
+            "keeps": { "type": "string" }
+          }
+        },
+        "equipment": { "type": "array", "items": { "type": "string" } },
+        "assembleAndStore": { "type": "array", "items": { "type": "string" } },
+        "prepSchedule": { "type": "array", "items": { "$ref": "#/$defs/PrepStep" } },
+        "misePhase": { "$ref": "#/$defs/MisePhase" },
+        "cookPhase": { "$ref": "#/$defs/CookPhase" },
+        "macroBreakdown": { "$ref": "#/$defs/MacroBreakdown" },
+        "reheat": { "$ref": "#/$defs/Reheat" },
+        "deviationsFromPlan": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "PrepStep": {
+      "type": "object",
+      "required": ["offset", "label", "tasks"],
+      "description": "Per-recipe prep in RELATIVE time so it re-schedules against any future cook date. The client may merge identical combinable prep across a multi-recipe selection. Distinct from misePhase: this is fixed-offset, days/hours-ahead work (marinade, thaw); misePhase is flexible-timing chopping the user can do anytime up to (and often the day before) the cook.",
+      "properties": {
+        "offset": { "type": "string", "description": "Relative to cook start, e.g. 'T-44h', 'night-before', 'morning-of', 'same-day'." },
+        "label": { "type": "string" },
+        "tasks": { "type": "array", "items": { "type": "string" } },
+        "combinable": { "type": "boolean", "description": "Default true. False for prep that can't be pooled across recipes." },
+        "rationale": { "type": "string" }
+      }
+    },
+
+    "MisePhase": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Phase 1 of 2 — do-ahead prep: `bowls` + `standalones`, NO cook steps. Frequently done the day before cooking; the client may combine mise across multiple user-selected recipes into one chopping pass (canonical ingredientId merge). The display title is a client-side constant ('Mise'), not stored. No holdsOvernight flag — the user decides what to prep ahead vs day-of.",
+      "properties": {
+        "description": { "type": "string", "description": "Optional recipe-specific note (e.g. 'salsa is better made the night before')." },
+        "durationMinutes": { "type": "number", "minimum": 0 },
+        "bowls": { "type": "array", "items": { "$ref": "#/$defs/MiseBowl" } },
+        "standalones": { "type": "array", "items": { "$ref": "#/$defs/MiseStandalone" } }
+      }
+    },
+
+    "CookPhase": {
+      "type": "object",
+      "required": ["steps"],
+      "additionalProperties": true,
+      "description": "Phase 2 of 2 — cook-day actions as an ordered `steps[]`, NO mise bowls. The backgroundable kickoff step(s) lead (CookStep.backgroundable=true) so the app surfaces the long hands-off task first — start it, then move on to another recipe while it runs. Active cook + portion steps follow. The display title is a client-side constant ('Cook'), not stored.",
+      "properties": {
+        "description": { "type": "string", "description": "Optional recipe-specific note about the cook session." },
+        "durationMinutes": { "type": "number", "minimum": 0 },
+        "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/CookStep" } }
+      }
+    },
+
+    "MiseBowl": {
+      "type": "object",
+      "required": ["id", "name", "ingredients"],
+      "additionalProperties": true,
+      "description": "A grouped mise bowl. Its `ingredients` carry canonical identity so the CLIENT can combine this bowl with same-ingredient+same-prep ingredients from OTHER selected recipes. Position in bowls[] is the order (no bowlNumber).",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "ingredients": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Ingredient" } },
+        "steps": { "type": "array", "items": { "type": "string" }, "description": "Prose prep actions for this bowl (e.g. 'Combine in one bowl; toss')." }
+      }
+    },
+
+    "Ingredient": {
+      "type": "object",
+      "required": ["ingredientId", "name"],
+      "additionalProperties": true,
+      "description": "The ONE ingredient shape, used by both mise bowls and cook steps. The CLIENT merges MISE ingredients across recipes by (ingredientId, unit, preparation): same id + same unit + same prep sum into one combined bowl; differing prep stays separate. Cook-step ingredients carry the same shape for cross-reference but are not merged.",
+      "properties": {
+        "ingredientId": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Stable canonical slug, e.g. 'white-rice', 'lime', 'yellow-onion'. Merge key." },
+        "name": { "type": "string", "description": "Human display name." },
+        "quantity": { "type": ["number", "string", "null"], "description": "Number for mergeable mise; may be a display string (e.g. '~135') on cook steps." },
+        "unit": { "type": ["string", "null"], "description": "Canonical unit: g, ml, each, clove, tsp, Tbsp, wedge, pinch, can, …" },
+        "preparation": { "type": ["string", "null"], "description": "e.g. 'diced', 'sliced', 'juiced'. Part of the mise merge key — different prep can't share a bowl." },
+        "combinable": { "type": "boolean", "description": "Mise only. Default true; false for 'to taste' / pinch / pan-oil items." }
+      }
+    },
+
+    "MiseStandalone": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": true,
+      "description": "An item that needs no prep bowl (stays in its own container) but should appear in the mise list.",
+      "properties": {
+        "name": { "type": "string" },
+        "ingredientId": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "prep": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "CookStep": {
+      "type": "object",
+      "required": ["id", "steps"],
+      "additionalProperties": true,
+      "description": "An ordered cook-day step: prose `steps` plus any structured `ingredients` it acts on (same Ingredient shape as mise — but cook ingredients are NOT combined across recipes). The first step(s) are typically backgroundable (long + hands-off) and lead the cookPhase. Self-contained: no cross-recipe references. Position in steps[] is the order (no stepNumber).",
+      "properties": {
+        "id": { "type": "string" },
+        "clockTime": { "type": "string" },
+        "label": { "type": "string" },
+        "backgroundable": { "type": "boolean", "description": "Default false. True = long-running + hands-off (start it and walk away — rice, sous-vide, oven roast). The app surfaces backgroundable steps first and lets the user move to another recipe while the timer runs; these lead the cookPhase. Pairs with `timer`." },
+        "steps": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "ingredients": { "type": "array", "items": { "$ref": "#/$defs/Ingredient" } },
+        "timer": { "$ref": "#/$defs/Timer" },
+        "handsOff": { "type": "array", "items": { "type": "string" }, "description": "Concurrent hands-off ops in THIS recipe (plain strings — no cross-recipe references)." },
+        "isFinalStep": { "type": "boolean" }
+      }
+    },
+
+    "Timer": {
+      "type": "object",
+      "properties": {
+        "label": { "type": "string" },
+        "durationSeconds": { "type": "number", "minimum": 0 },
+        "maxDurationSeconds": { "type": "number", "minimum": 0 },
+        "durationDescription": { "type": "string" }
+      }
+    },
+
+    "MacroBreakdown": {
+      "type": "object",
+      "required": ["ingredients"],
+      "additionalProperties": true,
+      "description": "Canonical per-serving macro source. recipe.perServing = the exact Σ of these rows (derive.py). The app can also display the breakdown and sum any subset.",
+      "properties": {
+        "ingredients": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/MacroIngredient" } }
+      }
+    },
+
+    "MacroIngredient": {
+      "allOf": [
+        { "$ref": "#/$defs/Macro" },
+        {
+          "type": "object",
+          "required": ["name"],
+          "description": "Per-serving macro row: the 4 macros plus the ingredient name and per-serving amount (quantity/unit inlined — no nested Amount object).",
+          "properties": {
+            "name": { "type": "string" },
+            "ingredientId": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+            "quantity": { "type": ["number", "null"] },
+            "unit": { "type": ["string", "null"] },
+            "displayHint": { "type": "string", "description": "Free text when not a clean number, e.g. 'from ~180g raw', 'trace', '¼ avocado'." },
+            "source": { "type": "string", "description": "Citation, e.g. 'USDA FDC 171477'." }
+          }
+        }
+      ]
+    },
+
+    "Reheat": {
+      "type": "object",
+      "required": ["method"],
+      "properties": {
+        "method": { "type": "string" },
+        "timeSeconds": { "type": "number", "minimum": 0 },
+        "extraSteps": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

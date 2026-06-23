@@ -42,29 +42,22 @@ class MiseScreenshotScrollTest {
     private val card = loadSampleCookCard()
 
     /**
-     * Regression guard for the dot-leader wrapping fix: a very long ingredient
-     * amount must wrap within its own column instead of starving the name column
-     * and ballooning the row. The list is scrolled into view so the row is captured.
+     * Regression guard for the dot-leader wrapping fix: ingredient amounts must
+     * wrap within their own column instead of starving the name column and
+     * ballooning the row. The salmon recipe has the longest ingredient list in the
+     * sample card (its mise spice mix plus cook-step ingredients), so it both
+     * exercises a variety of amount strings and is long enough to require a scroll.
+     * The list is scrolled until the final "salmon portions" row is in view so it
+     * is captured.
      */
     @Test
     fun recipeDetailLongAmount() {
-        val recipe = card.recipes.first()
-        val longAmountRecipe = recipe.copy(
-            ingredients = recipe.ingredients.mapIndexed { index, ingredient ->
-                if (index == 0) {
-                    ingredient.copy(
-                        batchQuantity = "2 1/2 cups plus 3 tablespoons, divided — about 312 g sifted",
-                    )
-                } else {
-                    ingredient
-                }
-            },
-        )
+        val recipe = card.recipes.first { it.id.value == "jerk-salmon-mango-salsa" }
         composeRule.setContent {
             MiseTheme(textStyles = ScreenshotTextStyles) {
                 Box(modifier = Modifier.fillMaxSize().background(MiseTokens.colors.bg)) {
                     Box(modifier = Modifier.fillMaxSize().padding(bottom = 86.dp)) {
-                        RecipeDetailPhone(recipe = longAmountRecipe, onBack = {}, onOpenInstructions = {})
+                        RecipeDetailPhone(recipe = recipe, onBack = {}, onOpenInstructions = {})
                     }
                     Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                         BottomNav(selected = MiseDestination.Recipes, onSelect = {})
@@ -72,9 +65,9 @@ class MiseScreenshotScrollTest {
                 }
             }
         }
-        // Scroll the ingredients list into view so the long-amount row is captured.
+        // Scroll the ingredients list down so the trailing ingredient rows are captured.
         composeRule.onNode(hasScrollAction())
-            .performScrollToNode(hasText("tablespoons", substring = true))
+            .performScrollToNode(hasText("salmon portions", substring = true))
         composeRule.onRoot().captureRoboImage("src/test/screenshots/phone-recipe-detail-long-amount.png")
     }
 }

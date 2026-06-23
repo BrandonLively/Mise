@@ -13,59 +13,40 @@ data class PrepTask(
 )
 
 /**
- * Filters schedule.prep tasks to food-prep items (marinade, thaw, ripen, fridge etc.)
- * and infers which recipe each one belongs to via keyword match.
+ * Flattens each recipe's [com.patchfox.mise.domain.model.PrepStep] (v3 per-recipe
+ * relative-offset prep — marinade, thaw, etc.) into a single attributed prep checklist.
+ * Attribution is exact: the prep lives on the recipe, so [PrepTask.attributedRecipeId]
+ * is the owning recipe (no keyword guessing).
  */
 class ParsePrepTasksUseCase @Inject constructor() {
 
-    private val foodPrepKeywords = listOf(
-        "marinat", "thaw", "ripen", "fridge", "freezer", "move", "season", "brine",
-        "soak", "refrigerate",
-    )
-
-    private val excludeKeywords = listOf("pickup", "walmart", "store", "booking")
-
     operator fun invoke(card: CookCard): List<PrepTask> {
         val result = mutableListOf<PrepTask>()
-        val recipes = card.recipes
-        for (entry in card.schedule.prep) {
-            for ((idx, raw) in entry.tasks.withIndex()) {
-                val lower = raw.lowercase()
-                if (excludeKeywords.any { it in lower }) continue
-                if (foodPrepKeywords.none { it in lower }) continue
-                val recipeId = inferRecipe(lower, recipes.map { it.id to it.name.lowercase() })
-                result += PrepTask(
-                    id = PrepTaskId("${entry.date}-$idx"),
-                    dayShortCaps = entry.dayOfWeek.name.take(3),
-                    text = raw,
-                    attributedRecipeId = recipeId,
-                )
+        for (recipe in card.recipes) {
+            recipe.prepSchedule.forEachIndexed { stepIdx, step ->
+                step.tasks.forEachIndexed { taskIdx, raw ->
+                    result += PrepTask(
+                        id = PrepTaskId("${recipe.id.value}-$stepIdx-$taskIdx"),
+                        dayShortCaps = offsetCaps(step.offset),
+                        text = raw,
+                        attributedRecipeId = recipe.id,
+                    )
+                }
             }
         }
         return result
     }
 
-    private fun inferRecipe(taskLower: String, recipes: List<Pair<RecipeId, String>>): RecipeId? {
-        // Direct keyword hits to recipe names
-        val keywordRecipe = listOf(
-            "chicken" to "chicken-burrito-bowl",
-            "shrimp" to "sheet-pan-shrimp-fajitas",
-            "avocado" to "black-bean-enchilada-skillet",
-            "enchilada" to "black-bean-enchilada-skillet",
-            "chia" to "mexican-chocolate-chia-pudding",
-            "pudding" to "mexican-chocolate-chia-pudding",
-        ).firstOrNull { (kw, _) -> kw in taskLower }?.second
-
-        if (keywordRecipe != null) {
-            val match = recipes.firstOrNull { it.first.value == keywordRecipe }
-            if (match != null) return match.first
+    /** Short caps label for the prep chip, derived from the relative offset. */
+    private fun offsetCaps(offset: String): String {
+        val o = offset.trim()
+        val lower = o.lowercase()
+        return when {
+            lower.startsWith("night") -> "EVE"
+            lower.startsWith("morning") -> "AM"
+            lower.startsWith("same") -> "DAY"
+            lower.startsWith("t-") -> o.substring(2).uppercase()
+            else -> o.take(4).uppercase()
         }
-
-        // Fallback: any recipe name token appears in the task
-        return recipes.firstOrNull { (_, name) ->
-            name.split(Regex("[^a-z0-9]+"))
-                .filter { it.length > 3 }
-                .any { it in taskLower }
-        }?.first
     }
 }

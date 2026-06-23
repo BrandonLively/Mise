@@ -11,6 +11,12 @@ import com.patchfox.mise.data.local.StartedTimerEntity
 import com.patchfox.mise.data.local.StepCompletionDao
 import com.patchfox.mise.data.local.StepCompletionEntity
 import com.patchfox.mise.data.local.SummaryInputDao
+import com.patchfox.mise.data.local.CompletedRecipeDao
+import com.patchfox.mise.data.local.CompletedRecipeEntity
+import com.patchfox.mise.data.local.CookStepIndexDao
+import com.patchfox.mise.data.local.CookStepIndexEntity
+import com.patchfox.mise.data.local.LaneVisibilityDao
+import com.patchfox.mise.data.local.LaneVisibilityEntity
 import com.patchfox.mise.data.local.SummaryInputEntity
 import com.patchfox.mise.domain.model.BowlId
 import com.patchfox.mise.domain.model.CookCardId
@@ -108,4 +114,52 @@ class DaysDivisorRepository @Inject constructor(private val dao: DaysDivisorDao)
     }
 
     companion object { const val DEFAULT_DAYS = 7 }
+}
+
+@Singleton
+class LaneVisibilityRepository @Inject constructor(private val dao: LaneVisibilityDao) {
+    /**
+     * A row = a lane the user has explicitly HIDDEN for that stage. The empty-table
+     * default is therefore "everything visible" (no seeding needed); completing a
+     * recipe writes a hide row while its command-bar chip stays.
+     *
+     * @return stage name -> set of hidden laneIds (a recipeId, or "shared").
+     */
+    fun observe(cookCardId: CookCardId): Flow<Map<String, Set<String>>> =
+        dao.observe(cookCardId.value).map { rows ->
+            rows.groupBy { it.stage }.mapValues { (_, v) -> v.map { it.laneId }.toSet() }
+        }
+
+    suspend fun setHidden(cookCardId: CookCardId, stage: String, laneId: String, hidden: Boolean) {
+        if (hidden) {
+            dao.insert(LaneVisibilityEntity(cookCardId.value, stage, laneId, System.currentTimeMillis()))
+        } else {
+            dao.delete(cookCardId.value, stage, laneId)
+        }
+    }
+}
+
+@Singleton
+class CookStepIndexRepository @Inject constructor(private val dao: CookStepIndexDao) {
+    /** laneKey (a recipeId, or "__shared__") -> current step index. */
+    fun observe(cookCardId: CookCardId): Flow<Map<String, Int>> =
+        dao.observe(cookCardId.value).map { rows -> rows.associate { it.laneKey to it.stepIndex } }
+
+    suspend fun set(cookCardId: CookCardId, laneKey: String, index: Int) {
+        dao.upsert(CookStepIndexEntity(cookCardId.value, laneKey, index))
+    }
+}
+
+@Singleton
+class CompletedRecipeRepository @Inject constructor(private val dao: CompletedRecipeDao) {
+    fun observe(cookCardId: CookCardId): Flow<Set<RecipeId>> =
+        dao.observe(cookCardId.value).map { it.map(::RecipeId).toSet() }
+
+    suspend fun toggle(cookCardId: CookCardId, recipeId: RecipeId, completed: Boolean) {
+        if (completed) {
+            dao.insert(CompletedRecipeEntity(cookCardId.value, recipeId.value, System.currentTimeMillis()))
+        } else {
+            dao.delete(cookCardId.value, recipeId.value)
+        }
+    }
 }

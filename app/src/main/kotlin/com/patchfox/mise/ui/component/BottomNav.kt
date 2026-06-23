@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +32,6 @@ data class NavItem(val destination: MiseDestination, val label: String, val icon
 val MiseNavItems = listOf(
     NavItem(MiseDestination.Home, "Schedule", Icons.Filled.CalendarMonth),
     NavItem(MiseDestination.Cook, "Cook", Icons.Filled.Restaurant),
-    NavItem(MiseDestination.Summary, "Summary", Icons.Filled.Scale),
     NavItem(MiseDestination.Recipes, "Recipes", Icons.Filled.MenuBook),
 )
 

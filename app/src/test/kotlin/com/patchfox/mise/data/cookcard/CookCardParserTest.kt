@@ -1,126 +1,103 @@
 package com.patchfox.mise.data.cookcard
 
 import com.patchfox.mise.domain.mapper.toDomain
-import com.patchfox.mise.domain.model.Phase
-import com.patchfox.mise.ui.theme.RecipeColor
+import com.patchfox.mise.domain.model.RecipeType
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
+/**
+ * v3 parser/mapper spec. Loads the on-disk v3 fixtures, parses them through
+ * [CookCardParser.parse] + [toDomain], and asserts the shape survives the round trip.
+ * Kept robust on purpose — exact step counts / numbers may drift, so we assert on
+ * structure and invariants rather than brittle totals.
+ */
 class CookCardParserTest {
 
-    private fun loadSample(): String =
-        javaClass.classLoader!!.getResourceAsStream("sample-cook-card.json")!!
-            .bufferedReader().use { it.readText() }
+    private fun load(resource: String): String =
+        this::class.java.getResource(resource)!!.readText()
+
+    private fun caribbean() = CookCardParser.parse(load("/sample-cook-card.json")).toDomain()
+
+    private fun minimal() = CookCardParser.parse(load("/cook-card-v3-minimal.json")).toDomain()
 
     @Test
-    fun `parses theme and recipe count from sample cook card`() {
-        val card = CookCardParser.parse(loadSample()).toDomain()
-        assertEquals("Latin / Tex-Mex", card.theme)
+    fun `caribbean sample parses theme and four recipes`() {
+        val card = caribbean()
+        assertEquals("Caribbean / Jerk", card.theme)
         assertEquals(4, card.recipes.size)
     }
 
     @Test
-    fun `phase 2 has 22 steps`() {
-        val card = CookCardParser.parse(loadSample()).toDomain()
-        val phase2 = card.cookPlan.phases.filterIsInstance<Phase.Phase2>().firstOrNull()
-        assertNotNull(phase2)
-        assertEquals(22, phase2!!.steps.size)
+    fun `minimal fixture parses two recipes`() {
+        val card = minimal()
+        assertEquals(2, card.recipes.size)
+        val ids = card.recipes.map { it.id.value }.toSet()
+        assertTrue("jerk-chicken-rice-peas" in ids)
+        assertTrue("jerk-salmon-mango-salsa" in ids)
     }
 
     @Test
-    fun `phase 1 has 9 mise bowls`() {
-        val card = CookCardParser.parse(loadSample()).toDomain()
-        val phase1 = card.cookPlan.phases.filterIsInstance<Phase.Phase1>().firstOrNull()
-        assertNotNull(phase1)
-        assertEquals(9, phase1!!.bowls.size)
+    fun `caribbean sample has a dessert recipe`() {
+        val card = caribbean()
+        assertTrue(
+            card.recipes.any { it.type == RecipeType.DESSERT },
+            "expected at least one DESSERT recipe in the caribbean card",
+        )
     }
 
     @Test
-    fun `chicken recipe color is BLUE`() {
-        val card = CookCardParser.parse(loadSample()).toDomain()
-        val chicken = card.recipes.first { it.id.value == "chicken-burrito-bowl" }
-        assertEquals(RecipeColor.BLUE, chicken.color)
+    fun `every caribbean recipe has at least one cook step`() {
+        val card = caribbean()
+        card.recipes.forEach { r ->
+            assertTrue(
+                r.cookPhase.steps.isNotEmpty(),
+                "recipe ${r.id.value} should have a non-empty cookPhase.steps",
+            )
+        }
     }
 
     @Test
-    fun `step 11 has a timer with 720 second lower bound`() {
-        val card = CookCardParser.parse(loadSample()).toDomain()
-        val phase2 = card.cookPlan.phases.filterIsInstance<Phase.Phase2>().first()
-        val step11 = phase2.steps.first { it.stepNumber == 11 }
-        assertEquals(720, step11.timer?.durationSeconds)
-        assertEquals(900, step11.timer?.maxDurationSeconds)
+    fun `the white-rice backgroundable steps exist`() {
+        val card = caribbean()
+        val backgroundableRiceSteps = card.recipes.flatMap { it.cookPhase.steps }
+            .filter { step -> step.backgroundable && step.ingredients.any { it.ingredientId == "white-rice" } }
+        assertTrue(
+            backgroundableRiceSteps.size >= 2,
+            "expected multiple backgroundable white-rice steps, got ${backgroundableRiceSteps.size}",
+        )
     }
 
     @Test
-    fun `v2 InstructionStep with structured ingredients parses`() {
-        val card = CookCardParser.parse(V2_MINI_CARD).toDomain()
-        val bowl = card.cookPlan.phases.filterIsInstance<Phase.Phase1>().first().bowls.first()
-        assertEquals(2, bowl.instruction.size)
+    fun `ingredient quantity is parsed when numeric and left null for messy strings`() {
+        val card = caribbean()
+        val allIngredients = card.recipes.flatMap { r ->
+            r.cookPhase.steps.flatMap { it.ingredients } + r.misePhase.bowls.flatMap { it.ingredients }
+        }
 
-        val first = bowl.instruction[0]
-        assertEquals("Combine the following directly in the saucepan off heat:", first.prefix)
-        val ingredients = first.ingredients
-        assertNotNull(ingredients)
-        assertEquals(3, ingredients!!.size)
-        assertEquals("whole milk", ingredients[0].name)
-        assertEquals("1,220", ingredients[0].quantity)
-        assertEquals("g", ingredients[0].unit)
-        assertEquals("pinch", ingredients[2].unit)
-        assertEquals(null, ingredients[2].quantity)
+        // At least one cleanly-numeric quantity (e.g. white rice "340"/280) parses to a Double.
+        assertTrue(
+            allIngredients.any { it.quantity != null },
+            "expected at least one ingredient with a non-null parsed quantity",
+        )
 
-        val second = bowl.instruction[1]
-        assertEquals("Whisk well to dissolve cocoa and cornstarch", second.prefix)
-        assertEquals(null, second.ingredients)
+        // At least one messy authored amount ("1 can", "½ tsp", "~120") keeps a display string
+        // but cannot be parsed to a clean number → quantity is null, quantityDisplay is set.
+        assertTrue(
+            allIngredients.any { it.quantity == null && !it.quantityDisplay.isNullOrBlank() },
+            "expected a messy-string ingredient with null quantity but a non-null quantityDisplay",
+        )
+    }
+
+    @Test
+    fun `a backgroundable step carries a populated timer`() {
+        val card = caribbean()
+        val timed = card.recipes.flatMap { it.cookPhase.steps }
+            .firstOrNull { it.backgroundable && it.timer != null }
+        assertNotNull(timed, "expected a backgroundable step with a timer")
+        val timer = timed!!.timer!!
+        assertTrue(timer.title.isNotBlank(), "timer.title should be populated")
+        assertTrue(timer.durationSeconds > 0, "timer.durationSeconds should be populated")
     }
 }
-
-// language=JSON
-private const val V2_MINI_CARD = """
-{
-  "schemaVersion": "2.0.0",
-  "meta": {
-    "id": "test-card",
-    "theme": "Test",
-    "cookDate": "2026-05-31",
-    "household": { "people": 2, "daysCovered": 7 },
-    "servingsPerMain": 14,
-    "dailyTarget": { "calories": 2000, "proteinFloorGrams": 100 },
-    "dailyActual": { "calories": 2000, "proteinGrams": 100, "carbsGrams": 200, "fatGrams": 80 }
-  },
-  "schedule": { "prep": [], "cook": [], "firstMeal": [] },
-  "recipes": [],
-  "cookPlan": {
-    "phases": [
-      {
-        "id": "phase-1",
-        "label": "Mise",
-        "bowls": [
-          {
-            "id": "bowl-1",
-            "bowlNumber": 1,
-            "name": "Pudding Base",
-            "forRecipeId": ["test-recipe"],
-            "ingredients": [],
-            "instruction": [
-              {
-                "instructionPrefix": "Combine the following directly in the saucepan off heat:",
-                "ingredients": [
-                  { "name": "whole milk", "quantity": "1,220", "unit": "g", "preparation": null },
-                  { "name": "unsweetened cocoa", "quantity": "38", "unit": "g", "preparation": null },
-                  { "name": "salt", "quantity": null, "unit": "pinch", "preparation": null }
-                ]
-              },
-              {
-                "instructionPrefix": "Whisk well to dissolve cocoa and cornstarch",
-                "ingredients": null
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }
-}
-"""
-

@@ -28,18 +28,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
+import com.patchfox.mise.domain.model.CookCard
 import com.patchfox.mise.domain.model.PrepTaskId
 import com.patchfox.mise.domain.model.Recipe
 import com.patchfox.mise.domain.model.RecipeId
-import com.patchfox.mise.domain.model.phase0
-import com.patchfox.mise.domain.model.phase1
-import com.patchfox.mise.domain.model.phase2
+import com.patchfox.mise.domain.model.totalActiveMinutes
 import com.patchfox.mise.ui.component.HeroCookDayCard
 import com.patchfox.mise.ui.component.HeroCookDayStats
 import com.patchfox.mise.ui.component.MiseCard
-import com.patchfox.mise.ui.component.PhaseTab
 import com.patchfox.mise.ui.component.PrepWorkList
 import com.patchfox.mise.ui.component.RecipeColorBand
+import com.patchfox.mise.ui.state.CookStage
 import com.patchfox.mise.ui.theme.MiseTokens
 import com.patchfox.mise.ui.theme.recipe
 
@@ -48,7 +47,7 @@ fun HomeTablet(
     state: HomeUiState,
     onTogglePrep: (PrepTaskId, Boolean) -> Unit,
     onWalkPlan: () -> Unit,
-    onOpenPhase: (PhaseTab) -> Unit,
+    onOpenStage: (CookStage) -> Unit,
     onOpenRecipe: (RecipeId) -> Unit,
 ) {
     if (state.card == null) {
@@ -73,7 +72,7 @@ fun HomeTablet(
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "2026 · WEEK 21 · COOK CARD",
+                        "${card.cookDate.year} · COOK CARD",
                         style = MiseTokens.text.micro,
                         color = MiseTokens.colors.ink3,
                     )
@@ -83,9 +82,12 @@ fun HomeTablet(
                             .background(MiseTokens.colors.accentWash, RoundedCornerShape(999.dp))
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                     ) {
-                        Text(card.cookDate.dayOfWeek.name.take(3) + " 10:00",
+                        Text(
+                            card.cookDate.dayOfWeek.name.take(3) + " · " +
+                                card.cookDate.month.name.take(3) + " " + card.cookDate.dayOfMonth,
                             style = MiseTokens.text.micro,
-                            color = MiseTokens.colors.accent)
+                            color = MiseTokens.colors.accent,
+                        )
                     }
                 }
                 Spacer(Modifier.height(20.dp))
@@ -94,10 +96,10 @@ fun HomeTablet(
                     dayLabel = card.cookDate.dayOfWeek.name.lowercase().replaceFirstChar { it.titlecase() } + " /",
                     italicTail = "tomorrow.",
                     stats = HeroCookDayStats(
-                        activeMinutes = card.cookPlan.totalActiveMinutes,
-                        stepCount = card.phase2()?.steps?.size ?: 0,
+                        activeMinutes = card.totalActiveMinutes(),
+                        stepCount = card.recipes.sumOf { it.cookPhase.steps.size },
                         recipeCount = card.recipes.size,
-                        bowlCount = card.phase1()?.bowls?.size ?: 0,
+                        bowlCount = card.recipes.sumOf { it.misePhase.bowls.size },
                     ),
                     onCta = onWalkPlan,
                 )
@@ -131,11 +133,11 @@ fun HomeTablet(
                 }
                 .padding(24.dp),
         ) {
-            CountdownTile()
+            CountdownTile(card)
             Spacer(Modifier.height(20.dp))
-            Text("COOK PHASES", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
+            Text("COOK STAGES", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
             Spacer(Modifier.height(8.dp))
-            CookPhasesList(card, onOpenPhase)
+            CookStagesList(card, onOpenStage)
             Spacer(Modifier.height(28.dp))
             Text("SCHEDULE PREVIEW", style = MiseTokens.text.micro, color = MiseTokens.colors.ink3)
             Spacer(Modifier.height(8.dp))
@@ -145,43 +147,44 @@ fun HomeTablet(
 }
 
 @Composable
-private fun CountdownTile() {
+private fun CountdownTile(card: CookCard) {
+    val cookDay = card.cookDate.dayOfWeek.name.lowercase().replaceFirstChar { it.titlecase() }
     MiseCard(
         modifier = Modifier.fillMaxWidth(),
         background = MiseTokens.colors.accentWash,
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("COUNTDOWN", style = MiseTokens.text.micro, color = MiseTokens.colors.accent)
+            Text("COOK DAY", style = MiseTokens.text.micro, color = MiseTokens.colors.accent)
             Spacer(Modifier.height(8.dp))
-            Text("22h to cook", style = MiseTokens.text.h2.copy(fontSize = MiseTokens.text.clockLarge.fontSize), color = MiseTokens.colors.ink)
-            Spacer(Modifier.height(6.dp))
-            Text("Chicken should already be marinating from Saturday night.", style = MiseTokens.text.small, color = MiseTokens.colors.ink2)
+            Text(
+                cookDay,
+                style = MiseTokens.text.h2.copy(fontSize = MiseTokens.text.clockLarge.fontSize),
+                color = MiseTokens.colors.ink,
+            )
+            if (card.theme.isNotBlank()) {
+                Spacer(Modifier.height(6.dp))
+                Text(card.theme, style = MiseTokens.text.small, color = MiseTokens.colors.ink2)
+            }
         }
     }
 }
 
 @Composable
-private fun CookPhasesList(
-    card: com.patchfox.mise.domain.model.CookCard,
-    onOpenPhase: (PhaseTab) -> Unit,
+private fun CookStagesList(
+    card: CookCard,
+    onOpenStage: (CookStage) -> Unit,
 ) {
-    data class PhaseRow(val label: String, val hint: String, val tab: PhaseTab)
-    val rows = listOfNotNull(
-        card.phase0()?.let { PhaseRow(it.label, "${it.steps.size} steps · ${it.estimatedMinutes} min", PhaseTab.Phase0) },
-        card.phase1()?.let { PhaseRow(it.label, "${it.bowls.size} bowls · ${it.estimatedMinutes} min", PhaseTab.Phase1) },
-        card.phase2()?.let { PhaseRow(it.label, "${it.steps.size} steps · ${it.estimatedMinutes} min", PhaseTab.Phase2) },
-    )
+    val rows = cookStageRows(card)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         rows.forEach { row ->
-            val (label, hint) = row.label to row.hint
             MiseCard(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { onOpenPhase(row.tab) },
+                onClick = { onOpenStage(row.stage) },
             ) {
                 Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(label, style = MiseTokens.text.bodyEmphasis, color = MiseTokens.colors.ink)
-                        Text(hint, style = MiseTokens.text.small, color = MiseTokens.colors.ink3)
+                        Text(row.label, style = MiseTokens.text.bodyEmphasis, color = MiseTokens.colors.ink)
+                        Text(row.hint, style = MiseTokens.text.small, color = MiseTokens.colors.ink3)
                     }
                     Icon(Icons.Filled.KeyboardArrowRight, null, tint = MiseTokens.colors.ink3)
                 }
@@ -190,22 +193,52 @@ private fun CookPhasesList(
     }
 }
 
+/** One relative-offset group of prep work, merged across the day's recipes. */
+private data class PrepGroup(val offset: String, val label: String, val tasks: List<String>)
+
+/**
+ * Builds the relative-offset prep timeline from each recipe's [PrepStep]s.
+ * Steps sharing the same offset are merged into one group (combinable tasks
+ * deduped); the cook day itself is appended as the final marker.
+ */
+private fun schedulePreviewGroups(card: CookCard): List<PrepGroup> {
+    val steps = card.recipes.flatMap { it.prepSchedule }
+    val merged = steps
+        .groupBy { it.offset }
+        .map { (offset, group) ->
+            val label = group.firstOrNull { it.label.isNotBlank() }?.label ?: offset
+            val tasks = group.flatMap { it.tasks }.distinct()
+            PrepGroup(offset = offset, label = label, tasks = tasks)
+        }
+    val cookDay = card.cookDate.dayOfWeek.name.lowercase().replaceFirstChar { it.titlecase() }
+    return merged + PrepGroup(offset = "cook day", label = "Cook · $cookDay", tasks = emptyList())
+}
+
 @Composable
-private fun SchedulePreview(card: com.patchfox.mise.domain.model.CookCard) {
-    val rows = buildList {
-        card.schedule.prep.forEach { add(it.dayOfWeek.name.take(3) + " · " + it.label) }
-        card.schedule.cook.forEach { add(it.dayOfWeek.name.take(3) + " · " + it.label) }
-        card.schedule.firstMeal.forEach { add(it.dayOfWeek.name.take(3) + " · " + it.label) }
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        rows.forEach { row ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier
-                    .background(MiseTokens.colors.ink2, RoundedCornerShape(999.dp))
-                    .height(6.dp)
-                    .width(6.dp))
+private fun SchedulePreview(card: CookCard) {
+    val groups = schedulePreviewGroups(card)
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        groups.forEach { group ->
+            Row(verticalAlignment = Alignment.Top) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 6.dp)
+                        .background(MiseTokens.colors.ink2, RoundedCornerShape(999.dp))
+                        .height(6.dp)
+                        .width(6.dp),
+                )
                 Spacer(Modifier.width(10.dp))
-                Text(row, style = MiseTokens.text.small, color = MiseTokens.colors.ink2)
+                Column {
+                    Text(
+                        group.offset.uppercase() + " · " + group.label,
+                        style = MiseTokens.text.micro,
+                        color = MiseTokens.colors.ink3,
+                    )
+                    group.tasks.forEach { task ->
+                        Spacer(Modifier.height(2.dp))
+                        Text(task, style = MiseTokens.text.small, color = MiseTokens.colors.ink2)
+                    }
+                }
             }
         }
     }
@@ -233,7 +266,8 @@ private fun RecipeGridTablet(recipes: List<Recipe>, onOpenRecipe: (RecipeId) -> 
                                 Text(r.name, style = MiseTokens.text.h2, color = MiseTokens.colors.ink)
                                 Spacer(Modifier.height(10.dp))
                                 Text(
-                                    "${r.perServing.calories.toInt()} kcal · ${r.perServing.proteinGrams.toInt()}g P · ${r.yield.servings} servings",
+                                    "${r.perServing.calories.toInt()} kcal · ${r.perServing.proteinGrams.toInt()}g P" +
+                                        (r.yield.servings?.let { " · $it servings" } ?: ""),
                                     style = MiseTokens.text.clock.copy(fontSize = MiseTokens.text.small.fontSize),
                                     color = MiseTokens.colors.ink3,
                                 )

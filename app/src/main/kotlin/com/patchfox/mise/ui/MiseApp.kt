@@ -32,7 +32,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.patchfox.mise.ui.component.BottomNav
 import com.patchfox.mise.ui.component.MiseNavRail
-import com.patchfox.mise.ui.component.PhaseTab
 import com.patchfox.mise.ui.nav.CookRoute
 import com.patchfox.mise.ui.nav.HomeRoute
 import com.patchfox.mise.ui.nav.MiseDestination
@@ -40,8 +39,8 @@ import com.patchfox.mise.ui.nav.MiseNavHost
 import com.patchfox.mise.ui.nav.RecipeDetailRoute
 import com.patchfox.mise.ui.nav.RecipeInstructionsRoute
 import com.patchfox.mise.ui.nav.RecipesRoute
-import com.patchfox.mise.ui.nav.SummaryRoute
 import com.patchfox.mise.ui.screen.login.LoginScreen
+import com.patchfox.mise.ui.state.CookStage
 import com.patchfox.mise.ui.theme.MiseTokens
 import com.patchfox.mise.ui.theme.recipe
 import com.patchfox.mise.ui.window.WindowSize
@@ -82,7 +81,6 @@ private fun SignedInApp(
         when {
             route.startsWith(HomeRoute::class.qualifiedName ?: "") -> MiseDestination.Home
             route.startsWith(CookRoute::class.qualifiedName ?: "") -> MiseDestination.Cook
-            route.startsWith(SummaryRoute::class.qualifiedName ?: "") -> MiseDestination.Summary
             route.startsWith(RecipesRoute::class.qualifiedName ?: "") -> MiseDestination.Recipes
             route.startsWith(RecipeDetailRoute::class.qualifiedName ?: "") -> MiseDestination.Recipes
             route.startsWith(RecipeInstructionsRoute::class.qualifiedName ?: "") -> MiseDestination.Recipes
@@ -144,7 +142,7 @@ private fun SignedInApp(
                 onExtendTimer = viewModel::extendTimer,
                 onJumpToStep = { stepId ->
                     nav.navigate(
-                        CookRoute(initialStepId = stepId, initialPhase = PhaseTab.Phase2.name),
+                        CookRoute(initialStepId = stepId, initialPhase = CookStage.COOK.name),
                     ) {
                         launchSingleTop = true
                     }

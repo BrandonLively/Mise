@@ -7,10 +7,9 @@ import kotlinx.serialization.Serializable
 @Serializable data object HomeRoute : MiseRoute
 @Serializable data class CookRoute(
     val initialStepId: String? = null,
-    /** "Phase0", "Phase1", or "Phase2"; null leaves the current selection. */
+    /** "MISE" or "COOK" (CookStage.name); null leaves the current selection. */
     val initialPhase: String? = null,
 ) : MiseRoute
-@Serializable data object SummaryRoute : MiseRoute
 @Serializable data object RecipesRoute : MiseRoute
 
 /** [cookCardId] null = this week's current card; non-null = a specific past card. */
@@ -28,7 +27,6 @@ import kotlinx.serialization.Serializable
 enum class MiseDestination(val label: String) {
     Home("Schedule"),
     Cook("Cook"),
-    Summary("Summary"),
     Recipes("Recipes");
 
     fun matches(other: MiseDestination): Boolean = this == other
@@ -36,7 +34,6 @@ enum class MiseDestination(val label: String) {
     fun route(): MiseRoute = when (this) {
         Home -> HomeRoute
         Cook -> CookRoute()
-        Summary -> SummaryRoute
         Recipes -> RecipesRoute
     }
 }
